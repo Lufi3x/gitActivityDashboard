@@ -13,7 +13,7 @@ if (file_exists($envFile)) {
 }
 
 // Güvenlik: Sadece mevcut olan klasör adlarına izin ver (Directory Traversal engellemesi)
-$allowedThemes = ['jarvis', 'activity_monitor'];
+$allowedThemes = ['jarvis', 'activity_monitor', 'nitro_hud'];
 if (!in_array($theme, $allowedThemes)) {
     $theme = 'jarvis';
 }
