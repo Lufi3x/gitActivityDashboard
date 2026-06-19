@@ -1,6 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initTabs();
     fetchActivity();
 });
+
+function initTabs() {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active class from all tabs and contents
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.style.display = 'none');
+
+            // Add active class to clicked tab
+            tab.classList.add('active');
+            
+            // Show corresponding content
+            const targetId = tab.getAttribute('data-target');
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                targetContent.style.display = 'block';
+            }
+        });
+    });
+}
 
 async function fetchActivity() {
     const tableBody = document.getElementById('activityTableBody');
@@ -61,6 +85,46 @@ async function fetchActivity() {
                     });
                 } else {
                     projectsList.innerHTML = '<li style="color: var(--text-secondary); background: transparent;">No active processes</li>';
+                }
+
+                // Network Graph (Calendar)
+                if (result.stats.calendar && result.stats.calendar.length > 0) {
+                    const graphContainer = document.getElementById('calendarGraph');
+                    graphContainer.innerHTML = '';
+                    
+                    result.stats.calendar.forEach(week => {
+                        const weekDiv = document.createElement('div');
+                        weekDiv.style.display = 'flex';
+                        weekDiv.style.flexDirection = 'column';
+                        weekDiv.style.gap = '4px';
+                        
+                        week.contributionDays.forEach(day => {
+                            const dayDiv = document.createElement('div');
+                            dayDiv.style.width = '10px';
+                            dayDiv.style.height = '10px';
+                            dayDiv.style.borderRadius = '2px';
+                            
+                            // Renk Seviyesi (Level 0-4)
+                            let color = 'var(--table-header-bg)';
+                            if (day.contributionCount > 0 && day.contributionCount <= 3) color = 'rgba(76, 175, 80, 0.4)';
+                            else if (day.contributionCount > 3 && day.contributionCount <= 9) color = 'rgba(76, 175, 80, 0.6)';
+                            else if (day.contributionCount > 9 && day.contributionCount <= 19) color = 'rgba(76, 175, 80, 0.8)';
+                            else if (day.contributionCount >= 20) color = 'var(--success-color)';
+                            
+                            dayDiv.style.backgroundColor = color;
+                            dayDiv.title = `${day.contributionCount} commits on ${day.date}`;
+                            
+                            weekDiv.appendChild(dayDiv);
+                        });
+                        
+                        graphContainer.appendChild(weekDiv);
+                    });
+                    
+                    // Scroll to end
+                    requestAnimationFrame(() => {
+                        const wrapper = graphContainer.parentElement;
+                        wrapper.scrollLeft = wrapper.scrollWidth;
+                    });
                 }
             }
 

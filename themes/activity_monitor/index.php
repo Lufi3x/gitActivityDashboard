@@ -64,13 +64,13 @@
             <main class="data-view">
                 <!-- Tab Bar -->
                 <div class="tab-bar">
-                    <button class="tab active">System Logs</button>
-                    <button class="tab">Network Graph</button>
-                    <button class="tab">Disk Usage</button>
+                    <button class="tab active" data-target="activityTableContainer">System Logs</button>
+                    <button class="tab" data-target="networkGraphContainer">Network Graph</button>
+                    <button class="tab" data-target="diskUsageContainer">Disk Usage</button>
                 </div>
                 
-                <!-- Table Area -->
-                <div class="table-container" id="activityTableContainer">
+                <!-- Table Area (System Logs) -->
+                <div class="tab-content active-content" id="activityTableContainer">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -86,6 +86,41 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Network Graph Area (Contribution Calendar) -->
+                <div class="tab-content" id="networkGraphContainer" style="display: none; padding: 20px;">
+                    <h3 style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 500; font-size: 0.85rem; text-transform: uppercase;">Connection Topology (365 Days)</h3>
+                    <div class="calendar-wrapper" style="overflow-x: auto; padding-bottom: 15px;">
+                        <div class="calendar-graph" id="calendarGraph" style="display: flex; gap: 4px;">
+                            <!-- Takvim buraya çizilecek -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disk Usage Area (Simulated) -->
+                <div class="tab-content" id="diskUsageContainer" style="display: none; padding: 30px;">
+                    <div style="max-width: 400px; font-family: 'JetBrains Mono', monospace; color: var(--text-primary);">
+                        <p style="margin-bottom: 10px;">VOLUME: /dev/disk1s1</p>
+                        <p style="margin-bottom: 5px; font-size: 0.8rem; color: var(--text-secondary);">Total Capacity: 500 GB</p>
+                        <div style="width: 100%; height: 20px; background: var(--table-header-bg); border: 1px solid var(--border-color); margin-bottom: 10px;">
+                            <div style="width: 12%; height: 100%; background: var(--accent-color);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                            <span><span style="color: var(--accent-color);">■</span> Used: 60 GB</span>
+                            <span>Free: 440 GB</span>
+                        </div>
+                        
+                        <p style="margin-top: 30px; margin-bottom: 10px;">CACHE FRAGMENTATION</p>
+                        <div style="width: 100%; height: 20px; background: var(--table-header-bg); border: 1px solid var(--border-color); margin-bottom: 10px; display: flex;">
+                            <div style="width: 40%; height: 100%; background: var(--success-color);"></div>
+                            <div style="width: 15%; height: 100%; background: var(--danger-color);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                            <span><span style="color: var(--success-color);">■</span> Clean: 40%</span>
+                            <span><span style="color: var(--danger-color);">■</span> Junk: 15%</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Footer Stats -->
