@@ -1,2 +1,5 @@
 # API Config Dosyası (Güvenlik İçin Kesinlikle Commitlenmemeli)
 api/config.php
+
+# API Önbellek Dosyası (Gereksiz Yükleme Yapmamak İçin)
+api/cache.json

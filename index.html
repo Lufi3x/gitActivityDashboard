@@ -31,6 +31,24 @@
             </div>
         </header>
 
+        <section class="stats-section" id="statsSection" style="display: none;">
+            <div class="stats-card glass-panel">
+                <h3 class="stats-title">Bugün</h3>
+                <ul class="stats-list">
+                    <li><span class="stats-icon">✓</span> <strong id="statCommits">0</strong> Commit</li>
+                    <li><span class="stats-icon text-success">✓</span> <strong id="statAdditions">0</strong> Satır Eklendi</li>
+                    <li><span class="stats-icon text-danger">✓</span> <strong id="statDeletions">0</strong> Satır Silindi</li>
+                    <li><span class="stats-icon text-accent">✓</span> <strong id="statRepos">0</strong> Repo Güncellendi</li>
+                </ul>
+            </div>
+            <div class="stats-card glass-panel">
+                <h3 class="stats-title">Aktif Projeler</h3>
+                <ul class="stats-list project-list" id="activeProjectsList">
+                    <!-- Aktif projeler buraya yüklenecek -->
+                </ul>
+            </div>
+        </section>
+
         <section class="activity-section">
             <h2 class="section-title">Son Aktiviteler</h2>
             <div id="activityTimeline" class="timeline">

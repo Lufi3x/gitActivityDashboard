@@ -28,6 +28,28 @@ async function fetchActivity() {
         }
 
         if (result.success && result.data) {
+            
+            // İstatistikleri ekrana bas
+            if (result.stats) {
+                const statsSec = document.getElementById('statsSection');
+                statsSec.style.display = 'flex';
+                
+                document.getElementById('statCommits').textContent = result.stats.commits;
+                document.getElementById('statAdditions').textContent = result.stats.additions.toLocaleString('tr-TR');
+                document.getElementById('statDeletions').textContent = result.stats.deletions.toLocaleString('tr-TR');
+                document.getElementById('statRepos').textContent = result.stats.repos;
+                
+                const projectsList = document.getElementById('activeProjectsList');
+                projectsList.innerHTML = '';
+                if (result.stats.active_projects && result.stats.active_projects.length > 0) {
+                    result.stats.active_projects.forEach(project => {
+                        projectsList.insertAdjacentHTML('beforeend', `<li>${project}</li>`);
+                    });
+                } else {
+                    projectsList.innerHTML = '<li style="color: var(--text-secondary); padding-left:0;">Bugün aktif proje yok</li>';
+                }
+            }
+
             // Kullanıcı bilgilerini güncelle (şimdilik statik username gösteriliyor, ileride github user api'den çekilebilir)
             userNameEl.textContent = 'GitHub Geliştiricisi'; 
             userBioEl.textContent = 'Son Aktiviteler';
