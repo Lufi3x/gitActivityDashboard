@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Etkinlik Paneli</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <main class="container">
+        <header class="dashboard-header glass-panel">
+            <div class="profile-info">
+                <div class="avatar-container placeholder-avatar">
+                    <div class="spinner"></div>
+                </div>
+                <div class="user-details">
+                    <h1 id="userName">Yükleniyor...</h1>
+                    <p id="userBio">GitHub Etkinlikleri Çekiliyor</p>
+                </div>
+            </div>
+            <div class="status-badge">
+                <span class="pulse"></span> Canlı
+            </div>
+        </header>
+
+        <section class="activity-section">
+            <h2 class="section-title">Son Aktiviteler</h2>
+            <div id="activityTimeline" class="timeline">
+                <!-- Aktiviteler buraya JS ile yüklenecek -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Veriler GitHub'dan alınıyor...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
