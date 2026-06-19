@@ -50,7 +50,7 @@ async function fetchActivity() {
             if (result.stats) {
                 // Uzun Dönem İstatistikleri
                 if (result.stats.weekly_commits !== undefined) {
-                    document.getElementById('longTermStatsSection').style.display = 'flex';
+                    document.getElementById('longTermStatsSection').style.display = 'grid';
                     document.getElementById('statWeekly').textContent = result.stats.weekly_commits;
                     document.getElementById('statMonthly').textContent = result.stats.monthly_commits;
                     document.getElementById('statYearly').textContent = result.stats.yearly_commits;
