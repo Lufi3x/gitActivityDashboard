@@ -1,30 +1,27 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Çekirdeği - GitHub Paneli</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
-    <!-- Theme Selector -->
-    <div class="theme-selector" id="themeSelector">
-        <button class="theme-btn btn-cyan active" data-theme="" title="J.A.R.V.I.S (Cyan)"></button>
-        <button class="theme-btn btn-orange" data-theme="theme-orange" title="F.R.I.D.A.Y (Orange)"></button>
-        <button class="theme-btn btn-red" data-theme="theme-red" title="Sith / Terminator (Red)"></button>
-        <button class="theme-btn btn-green" data-theme="theme-green" title="Matrix (Green)"></button>
-        <button class="theme-btn btn-purple" data-theme="theme-purple" title="Cyberpunk (Purple)"></button>
-    </div>
+
 
     <!-- HUD Background Lines -->
     <div class="hud-bg"></div>
     <div class="hud-scanline"></div>
 
     <div class="hud-container">
-        
+
         <!-- Arc Reactor Core -->
         <div class="reactor-section">
             <div class="tech-line left-tech"></div>
@@ -39,7 +36,7 @@
         </div>
 
         <div class="system-status">
-            <span class="status-text">SİSTEM AKTİF</span>
+            <span class="status-text">Github Activity Dasboard</span>
             <span class="status-pulse"></span>
         </div>
 
@@ -95,12 +92,16 @@
                 <h3 class="section-title">GÜNLÜK RAPOR</h3>
                 <ul class="stats-list">
                     <li><span class="stats-icon">▶</span> <strong id="statCommits">0</strong> İşlem Komutu</li>
-                    <li><span class="stats-icon text-success">▶</span> <strong id="statAdditions">0</strong> Veri Eklendi</li>
-                    <li><span class="stats-icon text-danger">▶</span> <strong id="statDeletions">0</strong> Veri Silindi</li>
-                    <li><span class="stats-icon text-accent">▶</span> <strong id="statRepos">0</strong> Modül Güncellendi</li>
-                    <li><span class="stats-icon text-warning">▶</span> <strong id="statWorkTime">0 Dakika</strong> Sistem Süresi</li>
+                    <li><span class="stats-icon text-success">▶</span> <strong id="statAdditions">0</strong> Veri
+                        Eklendi</li>
+                    <li><span class="stats-icon text-danger">▶</span> <strong id="statDeletions">0</strong> Veri Silindi
+                    </li>
+                    <li><span class="stats-icon text-accent">▶</span> <strong id="statRepos">0</strong> Modül
+                        Güncellendi</li>
+                    <li><span class="stats-icon text-warning">▶</span> <strong id="statWorkTime">0 Dakika</strong>
+                        Sistem Süresi</li>
                 </ul>
-                
+
                 <h3 class="section-title" style="margin-top: 30px;">AKTİF MODÜLLER</h3>
                 <ul class="stats-list project-list" id="activeProjectsList">
                     <!-- Aktif projeler buraya yüklenecek -->
@@ -126,4 +127,5 @@
 
     <script src="assets/js/app.js"></script>
 </body>
+
 </html>

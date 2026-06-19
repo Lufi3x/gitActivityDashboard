@@ -1,37 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    initThemeSelector();
     fetchActivity();
 });
-
-// Tema Seçici (Theme Switcher) ve Hafıza (localStorage) Yönetimi
-function initThemeSelector() {
-    const themeBtns = document.querySelectorAll('.theme-btn');
-    const savedTheme = localStorage.getItem('hudTheme');
-
-    // Kayıtlı tema varsa uygula
-    if (savedTheme) {
-        document.body.className = savedTheme;
-        themeBtns.forEach(b => b.classList.remove('active'));
-        const activeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`) || document.querySelector('.btn-cyan');
-        if (activeBtn) activeBtn.classList.add('active');
-    }
-
-    // Butonlara tıklama olayı
-    themeBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const theme = e.target.getAttribute('data-theme');
-            
-            document.body.className = theme; // Temayı uygula
-            
-            // Görsel olarak butonu seçili yap
-            themeBtns.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            
-            // Gelecekteki ziyaretler için hafızaya kaydet
-            localStorage.setItem('hudTheme', theme);
-        });
-    });
-}
 
 async function fetchActivity() {
     const timelineContainer = document.getElementById('activityTimeline');
@@ -55,6 +24,28 @@ async function fetchActivity() {
 
         if (result.success && result.data) {
             
+            // Gizlilik ve Modül Ayarları (Config)
+            if (result.config) {
+                if (result.config.show_system_logs === false) {
+                    const activitySection = document.querySelector('.activity-section');
+                    if (activitySection) activitySection.style.display = 'none';
+                }
+                
+                if (result.config.show_active_projects === false) {
+                    const projectsList = document.getElementById('activeProjectsList');
+                    if (projectsList) {
+                        projectsList.style.display = 'none';
+                        const title = projectsList.previousElementSibling;
+                        if (title && title.tagName === 'H3') title.style.display = 'none';
+                    }
+                }
+
+                // .env varsayılan temasını uygula (Kullanıcı seçimi iptal)
+                if (result.config.default_theme) {
+                    document.body.className = result.config.default_theme;
+                }
+            }
+
             // İstatistikleri ekrana bas
             if (result.stats) {
                 // Uzun Dönem İstatistikleri

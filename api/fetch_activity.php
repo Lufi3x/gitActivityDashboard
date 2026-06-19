@@ -235,7 +235,28 @@ if ($httpcode === 200) {
         }
     }
     
-    $output = json_encode(["success" => true, "data" => $filtered_events, "stats" => $stats]);
+    // GİZLİLİK VE MODÜL KONTROLLERİ
+    $showLogs = defined('SHOW_SYSTEM_LOGS') ? SHOW_SYSTEM_LOGS : true;
+    $showProjects = defined('SHOW_ACTIVE_PROJECTS') ? SHOW_ACTIVE_PROJECTS : true;
+    
+    if (!$showLogs) {
+        $filtered_events = []; // İfşayı engellemek için logları API'den bile siliyoruz
+    }
+    
+    if (!$showProjects) {
+        $stats['active_projects'] = []; // Proje isimlerini siliyoruz
+    }
+    
+    $output = json_encode([
+        "success" => true, 
+        "data" => $filtered_events, 
+        "stats" => $stats,
+        "config" => [
+            "show_system_logs" => $showLogs,
+            "show_active_projects" => $showProjects,
+            "default_theme" => defined('DEFAULT_THEME') ? DEFAULT_THEME : 'theme-cyan'
+        ]
+    ]);
     
     // Cache'i kaydet
     file_put_contents($cacheFile, $output);
