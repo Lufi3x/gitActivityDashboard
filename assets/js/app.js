@@ -38,6 +38,9 @@ async function fetchActivity() {
                 document.getElementById('statAdditions').textContent = result.stats.additions.toLocaleString('tr-TR');
                 document.getElementById('statDeletions').textContent = result.stats.deletions.toLocaleString('tr-TR');
                 document.getElementById('statRepos').textContent = result.stats.repos;
+                if (result.stats.work_time) {
+                    document.getElementById('statWorkTime').textContent = result.stats.work_time;
+                }
                 
                 const projectsList = document.getElementById('activeProjectsList');
                 projectsList.innerHTML = '';

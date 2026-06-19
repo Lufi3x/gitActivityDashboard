@@ -41,10 +41,12 @@ if ($httpcode === 200) {
         "additions" => 0,
         "deletions" => 0,
         "repos" => 0,
+        "work_time" => "0 Dakika",
         "active_projects" => []
     ];
     
     $unique_repos_today = [];
+    $today_timestamps = [];
 
     foreach ($events as $event) {
         $type = $event['type'];
@@ -131,6 +133,10 @@ if ($httpcode === 200) {
             "date" => $createdAt,
             "details" => $actionDetails
         ];
+        
+        if ($isToday) {
+            $today_timestamps[] = strtotime($createdAt);
+        }
     }
     
     foreach ($unique_repos_today as $repo => $val) {
@@ -138,6 +144,44 @@ if ($httpcode === 200) {
         $parts = explode('/', $repo);
         $projectName = count($parts) > 1 ? $parts[1] : $repo;
         $stats['active_projects'][] = ucfirst($projectName);
+    }
+    
+    // Çalışma süresi hesaplama (Clustering Algorithm)
+    if (count($today_timestamps) > 0) {
+        sort($today_timestamps); // Eskiden yeniye sırala
+        $totalMinutes = 0;
+        $sessionStart = null;
+        $lastTime = null;
+        
+        foreach ($today_timestamps as $time) {
+            if ($lastTime === null) {
+                $sessionStart = $time;
+                $lastTime = $time;
+            } elseif (($time - $lastTime) <= 3600) { // 60 dk boşluk kuralı
+                $lastTime = $time;
+            } else {
+                // Önceki oturumu kapat
+                $sessionDuration = ($lastTime - $sessionStart) / 60;
+                $totalMinutes += $sessionDuration + 30; // 30 dk buffer
+                $sessionStart = $time;
+                $lastTime = $time;
+            }
+        }
+        
+        // Son açık kalan oturumu kapat
+        if ($sessionStart !== null) {
+            $sessionDuration = ($lastTime - $sessionStart) / 60;
+            $totalMinutes += $sessionDuration + 30;
+        }
+        
+        $totalMinutes = round($totalMinutes);
+        if ($totalMinutes >= 60) {
+            $hours = floor($totalMinutes / 60);
+            $mins = $totalMinutes % 60;
+            $stats['work_time'] = "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
+        } else {
+            $stats['work_time'] = "{$totalMinutes} Dakika";
+        }
     }
     
     $output = json_encode(["success" => true, "data" => $filtered_events, "stats" => $stats]);
