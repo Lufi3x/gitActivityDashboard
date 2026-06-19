@@ -1,3 +1,6 @@
+<?php
+$defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) ? $envVariables['DEFAULT_THEME'] : 'theme-red';
+?>
 <!DOCTYPE html>
 <html lang="tr">
 
@@ -13,7 +16,7 @@
     <link rel="stylesheet" href="themes/jarvis/assets/css/style.css">
 </head>
 
-<body>
+<body class="<?= htmlspecialchars($defaultTheme) ?>">
 
 
     <!-- HUD Background Lines -->
