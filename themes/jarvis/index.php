@@ -14,6 +14,11 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="themes/jarvis/assets/css/style.css">
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="icon0.svg">
+    <link rel="apple-touch-icon" href="apple-icon.png">
+    <link rel="manifest" href="manifest.json">
 </head>
 
 <body class="<?= htmlspecialchars($defaultTheme) ?>">

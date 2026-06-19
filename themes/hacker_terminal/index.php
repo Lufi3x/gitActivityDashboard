@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="themes/hacker_terminal/assets/css/style.css">
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="icon0.svg">
+    <link rel="apple-touch-icon" href="apple-icon.png">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     
