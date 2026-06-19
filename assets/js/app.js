@@ -1,6 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initThemeSelector();
     fetchActivity();
 });
+
+// Tema Seçici (Theme Switcher) ve Hafıza (localStorage) Yönetimi
+function initThemeSelector() {
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    const savedTheme = localStorage.getItem('hudTheme');
+
+    // Kayıtlı tema varsa uygula
+    if (savedTheme) {
+        document.body.className = savedTheme;
+        themeBtns.forEach(b => b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`) || document.querySelector('.btn-cyan');
+        if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    // Butonlara tıklama olayı
+    themeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const theme = e.target.getAttribute('data-theme');
+            
+            document.body.className = theme; // Temayı uygula
+            
+            // Görsel olarak butonu seçili yap
+            themeBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            // Gelecekteki ziyaretler için hafızaya kaydet
+            localStorage.setItem('hudTheme', theme);
+        });
+    });
+}
 
 async function fetchActivity() {
     const timelineContainer = document.getElementById('activityTimeline');

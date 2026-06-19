@@ -3,3 +3,6 @@ api/config.php
 
 # API Önbellek Dosyası (Gereksiz Yükleme Yapmamak İçin)
 api/cache.json
+
+
+.env

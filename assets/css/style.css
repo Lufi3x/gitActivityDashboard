@@ -2,19 +2,73 @@
     --bg-color: #000000;
     --text-primary: #a1e8e9;
     --text-secondary: #4a7587;
-    --accent-color: #00f0ff;
-    --accent-glow: rgba(0, 240, 255, 0.8);
+    
+    /* Default J.A.R.V.I.S (Cyan) */
+    --accent-r: 0;
+    --accent-g: 240;
+    --accent-b: 255;
+    
     --success-color: #00ff88;
     --danger-color: #ff003c;
     --warning-color: #ffb000;
-    
-    /* Calendar HUD */
-    --cal-level-0: rgba(0, 240, 255, 0.05);
-    --cal-level-1: rgba(0, 240, 255, 0.25);
-    --cal-level-2: rgba(0, 240, 255, 0.50);
-    --cal-level-3: rgba(0, 240, 255, 0.75);
-    --cal-level-4: rgba(0, 240, 255, 1);
 }
+
+/* THEMES */
+body.theme-orange {
+    --accent-r: 255; --accent-g: 140; --accent-b: 0;
+    --success-color: #ffb700;
+    --text-primary: #ffe8cc;
+    --text-secondary: #cc9966;
+}
+body.theme-red {
+    --accent-r: 255; --accent-g: 0; --accent-b: 60;
+    --success-color: #ff3333;
+    --text-primary: #ffcccc;
+    --text-secondary: #cc6677;
+}
+body.theme-green {
+    --accent-r: 0; --accent-g: 255; --accent-b: 0;
+    --success-color: #66ff66;
+    --text-primary: #ccffcc;
+    --text-secondary: #66cc88;
+}
+body.theme-purple {
+    --accent-r: 176; --accent-g: 38; --accent-b: 255;
+    --success-color: #d17bff;
+    --text-primary: #f2ccff;
+    --text-secondary: #aa88cc;
+}
+
+/* Theme Selector */
+.theme-selector {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+    background: rgba(0, 10, 20, 0.8);
+    padding: 10px 15px;
+    border: 1px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.3);
+    backdrop-filter: blur(4px);
+    clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
+.theme-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.theme-btn:hover { transform: scale(1.2); }
+.theme-btn.active { border-color: #fff; box-shadow: 0 0 10px #fff; }
+
+.btn-cyan { background-color: #00f0ff; box-shadow: 0 0 8px #00f0ff; }
+.btn-orange { background-color: #ff8c00; box-shadow: 0 0 8px #ff8c00; }
+.btn-red { background-color: #ff003c; box-shadow: 0 0 8px #ff003c; }
+.btn-green { background-color: #00ff00; box-shadow: 0 0 8px #00ff00; }
+.btn-purple { background-color: #b026ff; box-shadow: 0 0 8px #b026ff; }
 
 * {
     margin: 0;
@@ -23,6 +77,15 @@
 }
 
 body {
+    /* Dinamik hesaplanan CSS değişkenleri (Tema sınıflarıyla ezildiğinde otomatik güncellenir) */
+    --accent-color: rgb(var(--accent-r), var(--accent-g), var(--accent-b));
+    --accent-glow: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.8);
+    --cal-level-0: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.05);
+    --cal-level-1: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.25);
+    --cal-level-2: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.50);
+    --cal-level-3: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.75);
+    --cal-level-4: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 1);
+
     font-family: 'Rajdhani', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
@@ -41,8 +104,8 @@ body {
     height: 100vh;
     z-index: -2;
     background-image: 
-        linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+        linear-gradient(rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.05) 1px, transparent 1px);
     background-size: 30px 30px;
 }
 
@@ -53,7 +116,7 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    background: linear-gradient(to bottom, transparent 50%, rgba(0, 240, 255, 0.02) 51%);
+    background: linear-gradient(to bottom, transparent 50%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.02) 51%);
     background-size: 100% 4px;
     pointer-events: none;
 }
@@ -172,7 +235,7 @@ body {
 /* --- HUD PANELS (SCI-FI BORDERS) --- */
 .hud-panel {
     background: rgba(0, 10, 20, 0.4);
-    border: 1px solid rgba(0, 240, 255, 0.2);
+    border: 1px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.2);
     position: relative;
     padding: 24px;
     backdrop-filter: blur(4px);
@@ -220,7 +283,7 @@ body {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.5rem;
     color: var(--text-primary);
-    text-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    text-shadow: 0 0 15px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.4);
 }
 .stat-value.accent { color: var(--accent-color); }
 .stat-value.success { color: var(--success-color); text-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
@@ -232,7 +295,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 15px;
-    border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+    border-bottom: 1px dashed rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.3);
     padding-bottom: 5px;
 }
 
@@ -267,13 +330,13 @@ body {
     gap: 15px;
     position: relative;
     padding-left: 20px;
-    border-left: 1px solid rgba(0, 240, 255, 0.2);
+    border-left: 1px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.2);
 }
 
 .activity-card {
     position: relative;
-    background: rgba(0, 240, 255, 0.03);
-    border: 1px solid rgba(0, 240, 255, 0.1);
+    background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.03);
+    border: 1px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1);
     padding: 15px;
     display: flex;
     gap: 15px;
@@ -282,19 +345,23 @@ body {
 }
 
 .activity-card:hover {
-    background: rgba(0, 240, 255, 0.1);
+    background: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1);
     border-color: var(--accent-color);
 }
 
 .activity-icon {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
     background: var(--accent-color);
     position: absolute;
-    left: -26px;
-    top: 20px;
+    left: -42px;
+    top: 15px;
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    border-radius: 4px;
+    color: #000;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
     box-shadow: 0 0 10px var(--accent-glow);
+    text-transform: uppercase;
 }
 
 .repo-name {
@@ -338,7 +405,7 @@ body {
     width: 12px;
     height: 12px;
     background-color: var(--cal-level-0);
-    border: 1px solid rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.1);
     transition: transform 0.1s, box-shadow 0.1s;
     cursor: pointer;
 }
@@ -379,7 +446,7 @@ body {
     background-color: rgba(0, 10, 20, 0.95);
     color: var(--accent-color);
     border: 1px solid var(--accent-color);
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 10px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.3);
     text-align: center;
     padding: 8px 12px;
     position: absolute;
