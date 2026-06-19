@@ -12,13 +12,27 @@ if (file_exists($envFile)) {
     }
 }
 
-// Güvenlik: Sadece mevcut olan klasör adlarına izin ver (Directory Traversal engellemesi)
 $allowedThemes = ['jarvis', 'activity_monitor', 'nitro_hud', 'hacker_terminal', 'minimal_light', 'glass_light'];
+
+// 1. Kullanıcıdan gelen Tema Değiştirme İsteği (GET parametresi)
+if (isset($_GET['theme']) && in_array($_GET['theme'], $allowedThemes)) {
+    $theme = $_GET['theme'];
+    // Seçimi Cookie'ye kaydet (30 gün)
+    setcookie('demo_theme', $theme, time() + (86400 * 30), '/');
+} 
+// 2. Cookie'de önceden seçilmiş bir tema var mı?
+elseif (isset($_COOKIE['demo_theme']) && in_array($_COOKIE['demo_theme'], $allowedThemes)) {
+    $theme = $_COOKIE['demo_theme'];
+}
+
 if (!in_array($theme, $allowedThemes)) {
     $theme = 'jarvis';
 }
 
 $themeFile = __DIR__ . '/themes/' . $theme . '/index.php';
+
+// Temayı hemen yazdırma, hafızaya al (Output Buffering)
+ob_start();
 
 if (file_exists($themeFile)) {
     include $themeFile;
@@ -26,3 +40,19 @@ if (file_exists($themeFile)) {
     echo "<h1>Tema dosyası bulunamadı: " . htmlspecialchars($theme) . "</h1>";
     echo "<p>Lütfen 'themes' klasöründeki yapıları kontrol edin veya .env dosyasındaki UI_THEME ayarını düzeltin.</p>";
 }
+
+$htmlOutput = ob_get_clean();
+
+// Eğer ENABLE_THEME_SWITCHER açıksa, Widget'ı </body> etiketinden önce enjekte et
+$enableSwitcher = isset($envVariables['ENABLE_THEME_SWITCHER']) && filter_var($envVariables['ENABLE_THEME_SWITCHER'], FILTER_VALIDATE_BOOLEAN);
+
+if ($enableSwitcher && file_exists(__DIR__ . '/includes/theme_switcher.php')) {
+    ob_start();
+    include __DIR__ . '/includes/theme_switcher.php';
+    $switcherHtml = ob_get_clean();
+    
+    // HTML'in sonundaki </body> etiketini bul ve öncesine Switcher'ı ekle
+    $htmlOutput = str_replace('</body>', $switcherHtml . "\n</body>", $htmlOutput);
+}
+
+echo $htmlOutput;

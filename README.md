@@ -82,6 +82,10 @@ SHOW_ACTIVE_PROJECTS=true
 # Adjust the API cache duration (in minutes). 
 # Warning: Setting this too low (e.g., 1) might cause you to hit GitHub's Rate Limits.
 CACHE_DURATION_MINUTES=10
+
+# Enable a floating Theme Switcher widget for your visitors (perfect for Demo sites)
+# This safely changes the theme using cookies without modifying the .env file.
+ENABLE_THEME_SWITCHER=true
 ```
 
 ## 📝 License

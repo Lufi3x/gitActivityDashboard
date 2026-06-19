@@ -29,9 +29,16 @@ define('GITHUB_USERNAME', isset($envVariables['GITHUB_USERNAME']) ? trim($envVar
 define('GITHUB_TOKEN', isset($envVariables['GITHUB_TOKEN']) ? trim($envVariables['GITHUB_TOKEN']) : '');
 define('DEFAULT_THEME', isset($envVariables['DEFAULT_THEME']) ? trim($envVariables['DEFAULT_THEME']) : 'theme-cyan');
 
-// UI Tema (jarvis veya activity_monitor)
-define('UI_THEME', isset($envVariables['UI_THEME']) ? trim($envVariables['UI_THEME']) : 'jarvis');
+$allowedThemes = ['jarvis', 'activity_monitor', 'nitro_hud', 'hacker_terminal', 'minimal_light', 'glass_light'];
+$finalTheme = isset($envVariables['UI_THEME']) ? trim($envVariables['UI_THEME']) : 'jarvis';
 
+// Eğer Tema Switcher açıksa ve cookie varsa onu kullan
+if (isset($envVariables['ENABLE_THEME_SWITCHER']) && filter_var($envVariables['ENABLE_THEME_SWITCHER'], FILTER_VALIDATE_BOOLEAN)) {
+    if (isset($_COOKIE['demo_theme']) && in_array($_COOKIE['demo_theme'], $allowedThemes)) {
+        $finalTheme = $_COOKIE['demo_theme'];
+    }
+}
+define('UI_THEME', $finalTheme);
 // Görünürlük (Gizlilik) Modülleri
 define('SHOW_SYSTEM_LOGS', isset($envVariables['SHOW_SYSTEM_LOGS']) ? filter_var($envVariables['SHOW_SYSTEM_LOGS'], FILTER_VALIDATE_BOOLEAN) : true);
 define('SHOW_ACTIVE_PROJECTS', isset($envVariables['SHOW_ACTIVE_PROJECTS']) ? filter_var($envVariables['SHOW_ACTIVE_PROJECTS'], FILTER_VALIDATE_BOOLEAN) : true);
