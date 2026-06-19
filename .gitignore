@@ -1,8 +1,13 @@
-# API Config Dosyası (Güvenlik İçin Kesinlikle Commitlenmemeli)
-api/config.php
+# Çevre Değişkenleri ve Gizli Anahtarlar (Kesinlikle Commitlenmemeli)
+.env
+.env.local
+.env.development
+.env.production
 
 # API Önbellek Dosyası (Gereksiz Yükleme Yapmamak İçin)
+cache.json
 api/cache.json
 
-
-.env
+# İşletim Sistemi Dosyaları
+.DS_Store
+Thumbs.db
