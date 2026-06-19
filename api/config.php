@@ -36,6 +36,9 @@ define('UI_THEME', isset($envVariables['UI_THEME']) ? trim($envVariables['UI_THE
 define('SHOW_SYSTEM_LOGS', isset($envVariables['SHOW_SYSTEM_LOGS']) ? filter_var($envVariables['SHOW_SYSTEM_LOGS'], FILTER_VALIDATE_BOOLEAN) : true);
 define('SHOW_ACTIVE_PROJECTS', isset($envVariables['SHOW_ACTIVE_PROJECTS']) ? filter_var($envVariables['SHOW_ACTIVE_PROJECTS'], FILTER_VALIDATE_BOOLEAN) : true);
 
+// Cache Süresi (Dakika cinsinden, varsayılan 10)
+define('CACHE_DURATION_MINUTES', isset($envVariables['CACHE_DURATION_MINUTES']) ? (int)trim($envVariables['CACHE_DURATION_MINUTES']) : 10);
+
 
 if (empty(GITHUB_USERNAME) || empty(GITHUB_TOKEN)) {
     echo json_encode(['error' => 'GITHUB_USERNAME veya GITHUB_TOKEN eksik. Lütfen .env dosyanızı kontrol edin.']);

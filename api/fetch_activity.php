@@ -7,7 +7,7 @@ if (GITHUB_TOKEN === 'BURAYA_GITHUB_TOKEN_GELECEK' || empty(GITHUB_TOKEN)) {
 }
 
 $cacheFile = 'cache.json';
-$cacheTime = 600; // 10 dakika
+$cacheTime = CACHE_DURATION_MINUTES * 60; // Dakikayı saniyeye çevir
 
 // Cache kontrolü
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {

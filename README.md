@@ -67,9 +67,9 @@ UI_THEME=nitro_hud
 ```
 *Note: The `jarvis` theme also supports color customization via the `DEFAULT_THEME` variable (Options: `theme-cyan`, `theme-orange`, `theme-red`, `theme-green`, `theme-purple`).*
 
-## 🛠️ Privacy Settings
+## 🛠️ Configuration & Privacy Settings
 
-You can hide sensitive data if you intend to host this dashboard publicly (e.g., on a portfolio site or a TV monitor in your office). 
+You can hide sensitive data or adjust system performance if you intend to host this dashboard publicly. 
 
 Edit these flags in your `.env` file:
 ```env
@@ -78,6 +78,10 @@ SHOW_SYSTEM_LOGS=true
 
 # Set to false to hide the names of the repositories you are working on
 SHOW_ACTIVE_PROJECTS=true
+
+# Adjust the API cache duration (in minutes). 
+# Warning: Setting this too low (e.g., 1) might cause you to hit GitHub's Rate Limits.
+CACHE_DURATION_MINUTES=10
 ```
 
 ## 📝 License
