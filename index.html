@@ -3,58 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Etkinlik Paneli</title>
+    <title>Sistem Çekirdeği - GitHub Paneli</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <div class="background-effects">
-        <div class="glow-orb orb-1"></div>
-        <div class="glow-orb orb-2"></div>
-    </div>
+    <!-- HUD Background Lines -->
+    <div class="hud-bg"></div>
+    <div class="hud-scanline"></div>
 
-    <main class="container">
-        <header class="dashboard-header glass-panel">
-            <div class="profile-info">
-                <div class="avatar-container placeholder-avatar">
-                    <div class="spinner"></div>
-                </div>
-                <div class="user-details">
-                    <h1 id="userName">Yükleniyor...</h1>
-                    <p id="userBio">GitHub Etkinlikleri Çekiliyor</p>
+    <div class="hud-container">
+        
+        <!-- Arc Reactor Core -->
+        <div class="reactor-section">
+            <div class="tech-line left-tech"></div>
+            <div class="arc-reactor">
+                <div class="ring ring-outer"></div>
+                <div class="ring ring-middle"></div>
+                <div class="ring ring-inner">
+                    <div class="reactor-core"></div>
                 </div>
             </div>
-            <div class="status-badge">
-                <span class="pulse"></span> Canlı
-            </div>
-        </header>
+            <div class="tech-line right-tech"></div>
+        </div>
 
-        <section class="stats-section" id="longTermStatsSection" style="display: none; margin-bottom: 20px; gap: 20px;">
-            <div class="stats-card glass-panel" style="text-align: center;">
-                <h3 class="stats-title" style="border:none; margin-bottom:5px;">Haftalık Katkı</h3>
-                <strong style="font-size: 2rem; color: var(--text-primary);" id="statWeekly">0</strong>
+        <div class="system-status">
+            <span class="status-text">SİSTEM AKTİF</span>
+            <span class="status-pulse"></span>
+        </div>
+
+        <!-- Long Term Stats (HUD Panels) -->
+        <section class="stats-grid" id="longTermStatsSection" style="display: none;">
+            <div class="hud-panel stat-box">
+                <div class="panel-corner top-left"></div>
+                <div class="panel-corner bottom-right"></div>
+                <h3 class="stats-title">Haftalık Katkı</h3>
+                <strong class="stat-value" id="statWeekly">0</strong>
             </div>
-            <div class="stats-card glass-panel" style="text-align: center;">
-                <h3 class="stats-title" style="border:none; margin-bottom:5px;">Aylık Katkı</h3>
-                <strong style="font-size: 2rem; color: var(--accent-color);" id="statMonthly">0</strong>
+            <div class="hud-panel stat-box">
+                <div class="panel-corner top-left"></div>
+                <div class="panel-corner bottom-right"></div>
+                <h3 class="stats-title">Aylık Katkı</h3>
+                <strong class="stat-value accent" id="statMonthly">0</strong>
             </div>
-            <div class="stats-card glass-panel" style="text-align: center;">
-                <h3 class="stats-title" style="border:none; margin-bottom:5px;">Yıllık Katkı</h3>
-                <strong style="font-size: 2rem; color: var(--success-color);" id="statYearly">0</strong>
+            <div class="hud-panel stat-box">
+                <div class="panel-corner top-left"></div>
+                <div class="panel-corner bottom-right"></div>
+                <h3 class="stats-title">Yıllık Katkı</h3>
+                <strong class="stat-value success" id="statYearly">0</strong>
             </div>
         </section>
 
-        <section class="calendar-section glass-panel" id="calendarSection" style="display: none; margin-bottom: 40px; padding: 24px;">
-            <h3 class="stats-title" style="border:none;">Son 1 Yıllık Katkı Takvimi</h3>
+        <!-- Contribution Calendar -->
+        <section class="hud-panel calendar-section" id="calendarSection" style="display: none;">
+            <div class="panel-corner top-right"></div>
+            <div class="panel-corner bottom-left"></div>
+            <h3 class="section-title">VERİ AKIŞI: 365 GÜN</h3>
             <div class="calendar-wrapper">
                 <div class="calendar-graph" id="calendarGraph">
                     <!-- Takvim JS ile çizilecek -->
                 </div>
             </div>
             <div class="calendar-legend">
-                <span style="font-size: 0.8rem; color: var(--text-secondary);">Daha az</span>
+                <span>MİN</span>
                 <ul class="legend-list">
                     <li style="background-color: var(--cal-level-0);"></li>
                     <li style="background-color: var(--cal-level-1);"></li>
@@ -62,40 +75,42 @@
                     <li style="background-color: var(--cal-level-3);"></li>
                     <li style="background-color: var(--cal-level-4);"></li>
                 </ul>
-                <span style="font-size: 0.8rem; color: var(--text-secondary);">Daha çok</span>
+                <span>MAKS</span>
             </div>
         </section>
 
-        <section class="stats-section" id="statsSection" style="display: none;">
-            <div class="stats-card glass-panel">
-                <h3 class="stats-title">Bugün</h3>
+        <!-- Daily Stats & Timeline -->
+        <div class="main-grid">
+            <section class="hud-panel" id="statsSection" style="display: none;">
+                <div class="panel-corner top-left"></div>
+                <h3 class="section-title">GÜNLÜK RAPOR</h3>
                 <ul class="stats-list">
-                    <li><span class="stats-icon">✓</span> <strong id="statCommits">0</strong> Commit</li>
-                    <li><span class="stats-icon text-success">✓</span> <strong id="statAdditions">0</strong> Satır Eklendi</li>
-                    <li><span class="stats-icon text-danger">✓</span> <strong id="statDeletions">0</strong> Satır Silindi</li>
-                    <li><span class="stats-icon text-accent">✓</span> <strong id="statRepos">0</strong> Repo Güncellendi</li>
-                    <li><span class="stats-icon" style="color:#ffb000;">⏱</span> <strong id="statWorkTime">0 Dakika</strong> Çalışma Süresi</li>
+                    <li><span class="stats-icon">▶</span> <strong id="statCommits">0</strong> İşlem Komutu</li>
+                    <li><span class="stats-icon text-success">▶</span> <strong id="statAdditions">0</strong> Veri Eklendi</li>
+                    <li><span class="stats-icon text-danger">▶</span> <strong id="statDeletions">0</strong> Veri Silindi</li>
+                    <li><span class="stats-icon text-accent">▶</span> <strong id="statRepos">0</strong> Modül Güncellendi</li>
+                    <li><span class="stats-icon text-warning">▶</span> <strong id="statWorkTime">0 Dakika</strong> Sistem Süresi</li>
                 </ul>
-            </div>
-            <div class="stats-card glass-panel">
-                <h3 class="stats-title">Aktif Projeler</h3>
+                
+                <h3 class="section-title" style="margin-top: 30px;">AKTİF MODÜLLER</h3>
                 <ul class="stats-list project-list" id="activeProjectsList">
                     <!-- Aktif projeler buraya yüklenecek -->
                 </ul>
-            </div>
-        </section>
+            </section>
 
-        <section class="activity-section">
-            <h2 class="section-title">Son Aktiviteler</h2>
-            <div id="activityTimeline" class="timeline">
-                <!-- Aktiviteler buraya JS ile yüklenecek -->
-                <div class="loading-state">
-                    <div class="spinner"></div>
-                    <p>Veriler GitHub'dan alınıyor...</p>
+            <section class="hud-panel activity-section">
+                <div class="panel-corner bottom-right"></div>
+                <h3 class="section-title">SİSTEM LOGLARI</h3>
+                <div id="activityTimeline" class="timeline">
+                    <!-- JavaScript ile yüklenecek -->
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>VERİLER ÇEKİLİYOR...</p>
+                    </div>
                 </div>
-            </div>
-        </section>
-    </main>
+            </section>
+        </div>
+    </div>
 
     <!-- Global Tooltip -->
     <div id="globalTooltip" class="global-tooltip"></div>

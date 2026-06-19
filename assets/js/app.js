@@ -4,9 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchActivity() {
     const timelineContainer = document.getElementById('activityTimeline');
-    const userNameEl = document.getElementById('userName');
-    const userBioEl = document.getElementById('userBio');
-    const avatarContainer = document.querySelector('.avatar-container');
 
     try {
         const response = await fetch('api/fetch_activity.php');
@@ -16,14 +13,12 @@ async function fetchActivity() {
 
         if (result.error) {
             timelineContainer.innerHTML = `
-                <div class="glass-panel activity-content" style="text-align:center; padding: 30px; color: #ff7b72;">
+                <div class="activity-card" style="text-align:center; padding: 30px; color: #ff7b72;">
                     <p>⚠️ Hata: ${result.error}</p>
                     <p style="font-size: 0.8rem; margin-top:10px; color: var(--text-secondary);">
                         api/config.php dosyasındaki GITHUB_TOKEN değerini girdiniz mi?
                     </p>
                 </div>`;
-            userNameEl.textContent = 'Kurulum Bekleniyor';
-            userBioEl.textContent = 'Lütfen ayarları yapın.';
             return;
         }
 
@@ -97,7 +92,7 @@ async function fetchActivity() {
                 }
 
                 const statsSec = document.getElementById('statsSection');
-                statsSec.style.display = 'flex';
+                statsSec.style.display = 'block';
                 
                 document.getElementById('statCommits').textContent = result.stats.commits;
                 document.getElementById('statAdditions').textContent = result.stats.additions.toLocaleString('tr-TR');
@@ -118,18 +113,10 @@ async function fetchActivity() {
                 }
             }
 
-            // Kullanıcı bilgilerini güncelle (şimdilik statik username gösteriliyor, ileride github user api'den çekilebilir)
-            userNameEl.textContent = 'GitHub Geliştiricisi'; 
-            userBioEl.textContent = 'Son Aktiviteler';
-            
-            // Eğer avatar verisini eklemek istersek, fetch_activity'den avatar_url de dönmeliyiz.
-            // Şimdilik GitHub'ın standart avatar URLsinden kullanıcının idsine göre çekebiliriz veya statik bırakabiliriz.
-            // Gerçek username'i events'ten alalım (ilk eventin aktöründen)
-            
             // API'den gelen verileri listele
             if (result.data.length === 0) {
                  timelineContainer.innerHTML = `
-                    <div class="glass-panel activity-content" style="text-align:center; padding: 30px;">
+                    <div class="activity-card" style="text-align:center; padding: 30px;">
                         <p>Yakın zamanda bir etkinlik bulunamadı.</p>
                     </div>`;
                 return;
@@ -151,7 +138,7 @@ async function fetchActivity() {
                 const cardHTML = `
                     <div class="activity-card" style="animation-delay: ${index * 0.1}s">
                         <div class="activity-icon">${typeCode}</div>
-                        <div class="glass-panel activity-content">
+                        <div class="activity-content">
                             <div class="activity-header">
                                 <span class="repo-name">${activity.repo}</span>
                                 <span class="activity-time">${formattedDate}</span>
@@ -165,15 +152,11 @@ async function fetchActivity() {
                 
                 timelineContainer.insertAdjacentHTML('beforeend', cardHTML);
             });
-            
-            // Profil resmini güncellemek için ekstra bir fetch eklenebilir veya config'den okunabilir.
-            // Bu örnekte avatar container'ı temizleyip bir emoji veya varsayılan bir ikon ekliyoruz.
-            avatarContainer.innerHTML = '<span style="font-size: 2rem;">🧑‍💻</span>';
 
         }
     } catch (error) {
         timelineContainer.innerHTML = `
-            <div class="glass-panel activity-content" style="text-align:center; padding: 30px; color: #ff7b72;">
+            <div class="activity-card" style="text-align:center; padding: 30px; color: #ff7b72;">
                 <p>⚠️ API ile bağlantı kurulamadı.</p>
                 <p style="font-size: 0.8rem; margin-top:10px; color: var(--text-secondary);">${error.message}</p>
             </div>`;
