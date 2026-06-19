@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="themes/jarvis/assets/css/style.css">
 </head>
 
 <body>
@@ -125,7 +125,7 @@
     <!-- Global Tooltip -->
     <div id="globalTooltip" class="global-tooltip"></div>
 
-    <script src="assets/js/app.js"></script>
+    <script src="themes/jarvis/assets/js/app.js"></script>
 </body>
 
 </html>
