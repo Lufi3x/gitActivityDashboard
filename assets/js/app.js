@@ -31,6 +31,71 @@ async function fetchActivity() {
             
             // İstatistikleri ekrana bas
             if (result.stats) {
+                // Uzun Dönem İstatistikleri
+                if (result.stats.weekly_commits !== undefined) {
+                    document.getElementById('longTermStatsSection').style.display = 'flex';
+                    document.getElementById('statWeekly').textContent = result.stats.weekly_commits;
+                    document.getElementById('statMonthly').textContent = result.stats.monthly_commits;
+                    document.getElementById('statYearly').textContent = result.stats.yearly_commits;
+                }
+                
+                // Katkı Takvimi (Contribution Graph) Çizimi
+                if (result.stats.calendar && result.stats.calendar.length > 0) {
+                    document.getElementById('calendarSection').style.display = 'block';
+                    const graphContainer = document.getElementById('calendarGraph');
+                    graphContainer.innerHTML = '';
+                    
+                    result.stats.calendar.forEach(week => {
+                        const weekDiv = document.createElement('div');
+                        weekDiv.className = 'calendar-week';
+                        
+                        week.contributionDays.forEach(day => {
+                            const dayDiv = document.createElement('div');
+                            dayDiv.className = 'calendar-day';
+                            
+                            // Renk Seviyesi (Level 0-4)
+                            let level = 0;
+                            if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
+                            else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
+                            else if (day.contributionCount > 9 && day.contributionCount <= 19) level = 3;
+                            else if (day.contributionCount >= 20) level = 4;
+                            
+                            dayDiv.setAttribute('data-level', level);
+                            
+                            // Global Tooltip İçin Olay Dinleyicileri
+                            const dateObj = new Date(day.date);
+                            const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                            
+                            dayDiv.addEventListener('mouseenter', (e) => {
+                                const globalTooltip = document.getElementById('globalTooltip');
+                                globalTooltip.innerHTML = `<strong>${day.contributionCount} katkı</strong><br>${dateStr}`;
+                                
+                                const rect = dayDiv.getBoundingClientRect();
+                                // Başlangıçta görünmeden önce içeriği ekleyip yüksekliğini ölçmemiz lazım
+                                globalTooltip.style.display = 'block';
+                                
+                                globalTooltip.style.left = rect.left + (rect.width / 2) + window.scrollX + 'px';
+                                globalTooltip.style.top = rect.top + window.scrollY - globalTooltip.offsetHeight - 8 + 'px';
+                                globalTooltip.classList.add('show');
+                            });
+                            
+                            dayDiv.addEventListener('mouseleave', () => {
+                                document.getElementById('globalTooltip').classList.remove('show');
+                            });
+                            
+                            weekDiv.appendChild(dayDiv);
+                        });
+                        
+                        graphContainer.appendChild(weekDiv);
+                    });
+                    
+                    // Takvimi en sağa kaydır (En güncel güne odaklanması için)
+                    requestAnimationFrame(() => {
+                        const wrapper = graphContainer.parentElement;
+                        wrapper.scrollLeft = wrapper.scrollWidth;
+                    });
+                }
+
                 const statsSec = document.getElementById('statsSection');
                 statsSec.style.display = 'flex';
                 

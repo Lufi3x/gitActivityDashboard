@@ -42,7 +42,11 @@ if ($httpcode === 200) {
         "deletions" => 0,
         "repos" => 0,
         "work_time" => "0 Dakika",
-        "active_projects" => []
+        "weekly_commits" => 0,
+        "monthly_commits" => 0,
+        "yearly_commits" => 0,
+        "active_projects" => [],
+        "calendar" => []
     ];
     
     $unique_repos_today = [];
@@ -181,6 +185,53 @@ if ($httpcode === 200) {
             $stats['work_time'] = "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
         } else {
             $stats['work_time'] = "{$totalMinutes} Dakika";
+        }
+    }
+    
+    // --- GRAPHQL BÖLÜMÜ (KATKI TAKVİMİ) ---
+    $graphqlUrl = "https://api.github.com/graphql";
+    $query = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { contributionsCollection { contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } } } } }"}';
+    
+    $chGraph = curl_init();
+    curl_setopt($chGraph, CURLOPT_URL, $graphqlUrl);
+    curl_setopt($chGraph, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($chGraph, CURLOPT_POST, true);
+    curl_setopt($chGraph, CURLOPT_POSTFIELDS, $query);
+    curl_setopt($chGraph, CURLOPT_HTTPHEADER, [
+        "User-Agent: PHP-GitActivityDashboard",
+        "Authorization: bearer " . GITHUB_TOKEN,
+        "Content-Type: application/json"
+    ]);
+    
+    $graphResponse = curl_exec($chGraph);
+    if (curl_getinfo($chGraph, CURLINFO_HTTP_CODE) === 200) {
+        $graphData = json_decode($graphResponse, true);
+        if (isset($graphData['data']['user']['contributionsCollection']['contributionCalendar'])) {
+            $calendar = $graphData['data']['user']['contributionsCollection']['contributionCalendar'];
+            
+            $stats['yearly_commits'] = $calendar['totalContributions'] ?? 0;
+            
+            // Tüm günleri düz bir listeye al
+            $allDays = [];
+            foreach ($calendar['weeks'] as $week) {
+                foreach ($week['contributionDays'] as $day) {
+                    $allDays[] = $day;
+                }
+            }
+            
+            $stats['calendar'] = $calendar['weeks']; // Arayüz için haftalık yapı
+
+            // Son 7 ve 30 günün hesaplanması (tersten)
+            $totalDays = count($allDays);
+            for ($i = 1; $i <= 30; $i++) {
+                if ($totalDays - $i >= 0) {
+                    $dayCount = $allDays[$totalDays - $i]['contributionCount'];
+                    $stats['monthly_commits'] += $dayCount;
+                    if ($i <= 7) {
+                        $stats['weekly_commits'] += $dayCount;
+                    }
+                }
+            }
         }
     }
     
