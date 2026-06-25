@@ -117,6 +117,8 @@ async function fetchActivity() {
                 statsSec.style.display = 'block';
                 
                 document.getElementById('statCommits').textContent = result.stats.commits;
+                const statChangedFiles = document.getElementById('statChangedFiles');
+                if (statChangedFiles) statChangedFiles.textContent = result.stats.changed_files || 0;
                 document.getElementById('statAdditions').textContent = result.stats.additions.toLocaleString('tr-TR');
                 document.getElementById('statDeletions').textContent = result.stats.deletions.toLocaleString('tr-TR');
                 document.getElementById('statRepos').textContent = result.stats.repos;

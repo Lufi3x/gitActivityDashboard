@@ -100,6 +100,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <h3 class="section-title">GÜNLÜK RAPOR</h3>
                 <ul class="stats-list">
                     <li><span class="stats-icon">▶</span> <strong id="statCommits">0</strong> İşlem Komutu</li>
+                    <li><span class="stats-icon text-info" style="color: #0ff;">▶</span> <strong id="statChangedFiles">0</strong> Dosya Değiştirildi</li>
                     <li><span class="stats-icon text-success">▶</span> <strong id="statAdditions">0</strong> Veri
                         Eklendi</li>
                     <li><span class="stats-icon text-danger">▶</span> <strong id="statDeletions">0</strong> Veri Silindi

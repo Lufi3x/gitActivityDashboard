@@ -37,6 +37,11 @@
                 <div class="metric-trend positive">Active today</div>
             </div>
             <div class="metric-card">
+                <h3 class="metric-title">Changed Files</h3>
+                <div class="metric-value" id="valChangedFiles">0</div>
+                <div class="metric-trend">Files touched</div>
+            </div>
+            <div class="metric-card">
                 <h3 class="metric-title">Lines Added</h3>
                 <div class="metric-value text-blue" id="valAdditions">0</div>
                 <div class="metric-trend">Code injected</div>
@@ -95,6 +100,10 @@
                         <div class="history-stat">
                             <span class="history-label">This Month</span>
                             <span class="history-value" id="valMonthly">0</span>
+                        </div>
+                        <div class="history-stat">
+                            <span class="history-label">This Year</span>
+                            <span class="history-value" id="valYearly">0</span>
                         </div>
                     </div>
                 </div>

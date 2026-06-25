@@ -40,6 +40,7 @@ if ($httpcode === 200) {
         "commits" => 0,
         "additions" => 0,
         "deletions" => 0,
+        "changed_files" => 0,
         "repos" => 0,
         "work_time" => "0 Dakika",
         "weekly_commits" => 0,
@@ -67,6 +68,7 @@ if ($httpcode === 200) {
             
             $pushAdditions = 0;
             $pushDeletions = 0;
+            $pushChangedFiles = 0;
             
             // Eğer bugünse, Compare API'den hem doğru commit sayısını hem de satır değişimlerini çekelim
             if ($isToday && isset($event['payload']['before']) && isset($event['payload']['head'])) {
@@ -90,6 +92,7 @@ if ($httpcode === 200) {
                             $commitCount = $compareData['total_commits']; 
                         }
                         if (isset($compareData['files'])) {
+                            $pushChangedFiles += count($compareData['files']);
                             foreach ($compareData['files'] as $file) {
                                 $pushAdditions += $file['additions'] ?? 0;
                                 $pushDeletions += $file['deletions'] ?? 0;
@@ -101,11 +104,13 @@ if ($httpcode === 200) {
 
             if (count($commits) > 0) {
                 $commitMessages = array_map(function($commit) { return $commit['message'] ?? ''; }, $commits);
-                $actionDetails = $commitCount . " commit pushlandı: " . implode(" | ", $commitMessages);
+                $fileInfo = ($isToday && $pushChangedFiles > 0) ? " ({$pushChangedFiles} dosya)" : "";
+                $actionDetails = $commitCount . " commit{$fileInfo} pushlandı: " . implode(" | ", $commitMessages);
             } else {
                 $ref = isset($event['payload']['ref']) ? str_replace('refs/heads/', '', $event['payload']['ref']) : 'bir';
                 if ($commitCount === 0) $commitCount = 1; // Fallback
-                $actionDetails = "{$commitCount} commit pushlandı ({$ref} dalına).";
+                $fileInfo = ($isToday && $pushChangedFiles > 0) ? " ({$pushChangedFiles} dosya)" : "";
+                $actionDetails = "{$commitCount} commit{$fileInfo} pushlandı ({$ref} dalına).";
             }
             
             // İstatistiklere ekle
@@ -113,6 +118,7 @@ if ($httpcode === 200) {
                 $stats['commits'] += $commitCount;
                 $stats['additions'] += $pushAdditions;
                 $stats['deletions'] += $pushDeletions;
+                $stats['changed_files'] += $pushChangedFiles;
                 $unique_repos_today[$repoName] = true;
             }
 

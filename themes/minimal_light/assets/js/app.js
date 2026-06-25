@@ -16,6 +16,7 @@ async function fetchActivity() {
             
             // 1. Populate Metric Cards with animation
             animateValue('valCommits', result.stats.commits || 0);
+            animateValue('valChangedFiles', result.stats.changed_files || 0);
             animateValue('valAdditions', result.stats.additions || 0);
             animateValue('valDeletions', result.stats.deletions || 0);
             
@@ -28,6 +29,7 @@ async function fetchActivity() {
             if (result.stats.weekly_commits !== undefined) {
                 document.getElementById('valWeekly').textContent = result.stats.weekly_commits;
                 document.getElementById('valMonthly').textContent = result.stats.monthly_commits;
+                document.getElementById('valYearly').textContent = result.stats.yearly_commits;
             }
 
             // Fade in cards sequentially
