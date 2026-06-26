@@ -8,7 +8,9 @@ async function fetchActivity() {
         const result = await response.json();
 
         if (result.error) {
-            document.getElementById('activityList').innerHTML = `<li class="text-red">Error: ${result.error}</li>`;
+            let errorText = result.error;
+            if (result.http_code) errorText += ` (HTTP ${result.http_code})`;
+            document.getElementById('activityList').innerHTML = `<li class="text-red">Error: ${errorText}</li>`;
             return;
         }
 

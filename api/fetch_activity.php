@@ -1,8 +1,8 @@
 <?php
 require_once 'config.php';
 
-if (GITHUB_TOKEN === 'BURAYA_GITHUB_TOKEN_GELECEK' || empty(GITHUB_TOKEN)) {
-    echo json_encode(["error" => "Lütfen api/config.php dosyasına GitHub Token'ınızı girin."]);
+if (empty(GITHUB_TOKEN)) {
+    echo json_encode(["error" => "Lütfen .env dosyasına GitHub Token'ınızı girin."]);
     exit;
 }
 

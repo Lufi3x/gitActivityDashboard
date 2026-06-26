@@ -12,11 +12,14 @@ async function fetchActivity() {
         timelineContainer.innerHTML = ''; // Temizle
 
         if (result.error) {
+            let details = '';
+            if (result.http_code) details += ` (HTTP: ${result.http_code})`;
+            
             timelineContainer.innerHTML = `
                 <div class="activity-card" style="text-align:center; padding: 30px; color: #ff7b72;">
-                    <p>⚠️ Hata: ${result.error}</p>
+                    <p>⚠️ Hata: ${result.error}${details}</p>
                     <p style="font-size: 0.8rem; margin-top:10px; color: var(--text-secondary);">
-                        api/config.php dosyasındaki GITHUB_TOKEN değerini girdiniz mi?
+                        .env dosyasındaki GITHUB_TOKEN ve GITHUB_USERNAME değerlerini kontrol edin. Token süresi dolmuş olabilir.
                     </p>
                 </div>`;
             return;
