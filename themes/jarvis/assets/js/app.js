@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDraggableReactor();
     initFullscreen();
     initNavMenu();
+    initDialClick();
 });
 
 function updateDateTime() {
@@ -175,6 +176,19 @@ function initNavMenu() {
     });
 }
 
+function initDialClick() {
+    const dial = document.getElementById('calendarSection');
+    // Find the STATISTICS button
+    const statsBtn = Array.from(document.querySelectorAll('.skew-btn')).find(b => b.querySelector('.skew-text').textContent === 'STATISTICS');
+    
+    if (dial && statsBtn) {
+        dial.style.cursor = 'pointer';
+        dial.addEventListener('click', () => {
+            statsBtn.click();
+        });
+    }
+}
+
 async function fetchActivity() {
     const timelineContainer = document.getElementById('activityTimeline');
 
@@ -303,10 +317,36 @@ async function fetchActivity() {
             // Büyük istatistik panelini güncelle
             if (result.stats) {
                 document.getElementById('bigStatCommits').textContent = result.stats.commits;
-                // Minik takvimi kopyala
-                const smallGraph = document.getElementById('calendarGraph');
-                if (smallGraph) {
-                    document.getElementById('bigCalendarGraph').innerHTML = smallGraph.innerHTML;
+                
+                // Tam (52 haftalık) Takvimi Oluştur
+                const bigGraphContainer = document.getElementById('bigCalendarGraph');
+                if (bigGraphContainer && result.stats.calendar && result.stats.calendar.length > 0) {
+                    bigGraphContainer.innerHTML = '';
+                    
+                    result.stats.calendar.forEach(week => {
+                        const colDiv = document.createElement('div');
+                        colDiv.className = 'calendar-col';
+                        colDiv.style.display = 'flex';
+                        colDiv.style.flexDirection = 'column';
+                        colDiv.style.gap = '2px';
+
+                        week.contributionDays.forEach(day => {
+                            const dayDiv = document.createElement('div');
+                            dayDiv.className = 'calendar-day';
+                            
+                            let level = 0;
+                            if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
+                            else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
+                            else if (day.contributionCount > 9 && day.contributionCount <= 19) level = 3;
+                            else if (day.contributionCount >= 20) level = 4;
+                            
+                            dayDiv.setAttribute('data-level', level);
+                            dayDiv.title = `${day.contributionCount} commits on ${day.date}`;
+                            colDiv.appendChild(dayDiv);
+                        });
+                        
+                        bigGraphContainer.appendChild(colDiv);
+                    });
                 }
             }
             
