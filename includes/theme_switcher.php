@@ -9,7 +9,8 @@ $allThemes = [
     'nitro_hud' => '🏎️ Nitro HUD',
     'hacker_terminal' => '🟢 Hacker Terminal',
     'minimal_light' => '☁️ Minimal Light',
-    'glass_light' => '💎 Glass Light'
+    'glass_light' => '💎 Glass Light',
+    'luffy' => '🏴‍☠️ Korsan Kralı (Luffy)'
 ];
 ?>
 

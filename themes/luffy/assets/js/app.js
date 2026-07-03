@@ -1,0 +1,153 @@
+document.addEventListener('DOMContentLoaded', () => {
+    fetchActivity();
+});
+
+async function fetchActivity() {
+    const timelineContainer = document.getElementById('activityTimeline');
+
+    try {
+        const response = await fetch('api/fetch_activity.php');
+        const result = await response.json();
+
+        timelineContainer.innerHTML = ''; // Temizle
+
+        if (result.error) {
+            timelineContainer.innerHTML = `
+                <div class="activity-card" style="text-align:center; padding: 30px; color: #e62e2e;">
+                    <p><i class="fa-solid fa-triangle-exclamation"></i> Hata: ${result.error}</p>
+                </div>`;
+            return;
+        }
+
+        if (result.success && result.data) {
+            
+            // Gizlilik ve Modül Ayarları
+            if (result.config) {
+                if (result.config.show_system_logs === false) {
+                    document.querySelector('.luffy-sidebar-right').style.display = 'none';
+                }
+                if (result.config.show_active_projects === false) {
+                    const projectsList = document.getElementById('activeProjectsList');
+                    if (projectsList) {
+                        projectsList.parentElement.style.display = 'none';
+                    }
+                }
+            }
+
+            // İstatistikleri ekrana bas
+            if (result.stats) {
+                // Uzun Dönem İstatistikleri
+                if (result.stats.weekly_commits !== undefined) {
+                    document.getElementById('longTermStatsSection').style.display = 'grid';
+                    document.getElementById('statWeekly').textContent = result.stats.weekly_commits;
+                    document.getElementById('statMonthly').textContent = result.stats.monthly_commits;
+                    document.getElementById('statYearly').textContent = result.stats.yearly_commits;
+                }
+                
+                // Katkı Takvimi
+                if (result.stats.calendar && result.stats.calendar.length > 0) {
+                    document.getElementById('calendarSection').style.display = 'block';
+                    const graphContainer = document.getElementById('calendarGraph');
+                    graphContainer.innerHTML = '';
+                    
+                    result.stats.calendar.forEach(week => {
+                        const weekDiv = document.createElement('div');
+                        weekDiv.className = 'calendar-week';
+                        
+                        week.contributionDays.forEach(day => {
+                            const dayDiv = document.createElement('div');
+                            dayDiv.className = 'calendar-day';
+                            
+                            let level = 0;
+                            if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
+                            else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
+                            else if (day.contributionCount > 9 && day.contributionCount <= 19) level = 3;
+                            else if (day.contributionCount >= 20) level = 4;
+                            
+                            dayDiv.setAttribute('data-level', level);
+                            
+                            const dateObj = new Date(day.date);
+                            const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                            
+                            dayDiv.addEventListener('mouseenter', (e) => {
+                                const globalTooltip = document.getElementById('globalTooltip');
+                                globalTooltip.innerHTML = `<strong>${day.contributionCount} Katkı</strong><br>${dateStr}`;
+                                const rect = dayDiv.getBoundingClientRect();
+                                globalTooltip.style.display = 'block';
+                                globalTooltip.style.left = rect.left + (rect.width / 2) + window.scrollX + 'px';
+                                globalTooltip.style.top = rect.top + window.scrollY - globalTooltip.offsetHeight - 8 + 'px';
+                                globalTooltip.classList.add('show');
+                            });
+                            
+                            dayDiv.addEventListener('mouseleave', () => {
+                                document.getElementById('globalTooltip').classList.remove('show');
+                            });
+                            
+                            weekDiv.appendChild(dayDiv);
+                        });
+                        graphContainer.appendChild(weekDiv);
+                    });
+                    
+                    requestAnimationFrame(() => {
+                        const wrapper = graphContainer.parentElement;
+                        wrapper.scrollLeft = wrapper.scrollWidth;
+                    });
+                }
+
+                // Günlük Rapor
+                document.getElementById('statsSection').style.display = 'block';
+                document.getElementById('statCommits').textContent = result.stats.commits;
+                if (document.getElementById('statChangedFiles')) document.getElementById('statChangedFiles').textContent = result.stats.changed_files || 0;
+                document.getElementById('statAdditions').textContent = '+' + result.stats.additions.toLocaleString('tr-TR');
+                document.getElementById('statDeletions').textContent = '-' + result.stats.deletions.toLocaleString('tr-TR');
+                document.getElementById('statRepos').textContent = result.stats.repos;
+                if (result.stats.work_time) document.getElementById('statWorkTime').textContent = result.stats.work_time;
+                
+                // Aktif Modüller
+                const projectsList = document.getElementById('activeProjectsList');
+                projectsList.innerHTML = '';
+                if (result.stats.active_projects && result.stats.active_projects.length > 0) {
+                    result.stats.active_projects.forEach(project => {
+                        projectsList.insertAdjacentHTML('beforeend', `<li>${project}</li>`);
+                    });
+                } else {
+                    projectsList.innerHTML = '<li style="color: var(--text-muted); font-size:0.9rem;">Bugün aktif proje yok</li>';
+                }
+            }
+
+            // Logları listele
+            if (result.data.length === 0) {
+                 timelineContainer.innerHTML = `<p style="padding: 20px; text-align:center; color: var(--text-muted);">Hareket bulunamadı.</p>`;
+                return;
+            }
+
+            result.data.forEach((activity, index) => {
+                const date = new Date(activity.date);
+                const timeStr = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute:'2-digit', second:'2-digit' });
+
+                let typeCode = '<i class="fa-solid fa-arrows-up-down"></i>';
+                if(activity.type === 'PushEvent') typeCode = '<i class="fa-solid fa-arrow-up"></i>';
+                else if(activity.type === 'CreateEvent') typeCode = '<i class="fa-solid fa-star"></i>';
+                else if(activity.type === 'PullRequestEvent') typeCode = '<i class="fa-solid fa-code-pull-request"></i>';
+
+                let actionName = activity.type.replace('Event', '').toUpperCase();
+
+                const cardHTML = `
+                    <div class="activity-card" style="animation-delay: ${index * 0.1}s">
+                        <div class="activity-icon">${typeCode}</div>
+                        <div class="activity-content">
+                            <span class="activity-time">${timeStr} &nbsp;&nbsp; <span class="activity-action">${actionName}</span></span>
+                            <div class="activity-desc">
+                                ${activity.details} <br>
+                                <small style="color: var(--text-muted);">${activity.repo}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+    } catch (error) {
+        timelineContainer.innerHTML = `<p style="color:red; text-align:center;"><i class="fa-solid fa-triangle-exclamation"></i> API Bağlantı Hatası</p>`;
+    }
+}
