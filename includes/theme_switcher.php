@@ -4,7 +4,7 @@ $currentTheme = isset($theme) ? $theme : 'jarvis';
 
 // Tüm temaların isimleri ve başlıkları
 $allThemes = [
-    'jarvis' => '🤖 Jarvis HUD',
+    'jarvis' => '🤖 Iron Man J.A.R.V.I.S',
     'activity_monitor' => '💻 Activity Monitor',
     'nitro_hud' => '🏎️ Nitro HUD',
     'hacker_terminal' => '🟢 Hacker Terminal',

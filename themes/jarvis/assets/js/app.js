@@ -1,6 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+    updateDateTime();
+    setInterval(updateDateTime, 1000); // Saat ve tarih canlı aksın
+    
     fetchActivity();
 });
+
+function updateDateTime() {
+    const now = new Date();
+    
+    // Day Number
+    const day = now.getDate().toString().padStart(2, '0');
+    document.getElementById('dayLarge').textContent = day;
+    
+    // Month Name
+    const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+    document.getElementById('monthText').textContent = months[now.getMonth()];
+    
+    // Day Name
+    const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+    document.getElementById('dayText').textContent = days[now.getDay()];
+}
 
 async function fetchActivity() {
     const timelineContainer = document.getElementById('activityTimeline');
@@ -12,68 +31,49 @@ async function fetchActivity() {
         timelineContainer.innerHTML = ''; // Temizle
 
         if (result.error) {
-            let details = '';
-            if (result.http_code) details += ` (HTTP: ${result.http_code})`;
-            
-            timelineContainer.innerHTML = `
-                <div class="activity-card" style="text-align:center; padding: 30px; color: #ff7b72;">
-                    <p>⚠️ Hata: ${result.error}${details}</p>
-                    <p style="font-size: 0.8rem; margin-top:10px; color: var(--text-secondary);">
-                        .env dosyasındaki GITHUB_TOKEN ve GITHUB_USERNAME değerlerini kontrol edin. Token süresi dolmuş olabilir.
-                    </p>
-                </div>`;
+            timelineContainer.innerHTML = `<div class="ticker-item"><span style="color:red">SYSTEM ERROR:</span> ${result.error}</div>`;
             return;
         }
 
         if (result.success && result.data) {
             
-            // Gizlilik ve Modül Ayarları (Config)
-            if (result.config) {
-                if (result.config.show_system_logs === false) {
-                    const activitySection = document.querySelector('.activity-section');
-                    if (activitySection) activitySection.style.display = 'none';
-                }
-                
-                if (result.config.show_active_projects === false) {
-                    const projectsList = document.getElementById('activeProjectsList');
-                    if (projectsList) {
-                        projectsList.style.display = 'none';
-                        const title = projectsList.previousElementSibling;
-                        if (title && title.tagName === 'H3') title.style.display = 'none';
-                    }
-                }
-
-                // .env varsayılan temasını uygula (Kullanıcı seçimi iptal)
-                if (result.config.default_theme) {
-                    document.body.className = result.config.default_theme;
-                }
-            }
-
-            // İstatistikleri ekrana bas
+            // Stats Panel
             if (result.stats) {
-                // Uzun Dönem İstatistikleri
+                // Long term stats (Progress Bars)
                 if (result.stats.weekly_commits !== undefined) {
-                    document.getElementById('longTermStatsSection').style.display = 'grid';
+                    document.getElementById('longTermStatsSection').style.display = 'flex';
+                    
                     document.getElementById('statWeekly').textContent = result.stats.weekly_commits;
                     document.getElementById('statMonthly').textContent = result.stats.monthly_commits;
                     document.getElementById('statYearly').textContent = result.stats.yearly_commits;
+
+                    // Progress Bar width calculation (example targets: 50 weekly, 200 monthly, 2000 yearly)
+                    let wPct = Math.min((result.stats.weekly_commits / 50) * 100, 100);
+                    let mPct = Math.min((result.stats.monthly_commits / 200) * 100, 100);
+                    let yPct = Math.min((result.stats.yearly_commits / 2000) * 100, 100);
+
+                    // Delay for animation
+                    setTimeout(() => {
+                        document.getElementById('barWeekly').style.width = wPct + '%';
+                        document.getElementById('barMonthly').style.width = mPct + '%';
+                        document.getElementById('barYearly').style.width = yPct + '%';
+                    }, 500);
                 }
                 
-                // Katkı Takvimi (Contribution Graph) Çizimi
+                // Calendar Map
                 if (result.stats.calendar && result.stats.calendar.length > 0) {
-                    document.getElementById('calendarSection').style.display = 'block';
+                    document.getElementById('calendarSection').style.display = 'flex';
                     const graphContainer = document.getElementById('calendarGraph');
                     graphContainer.innerHTML = '';
                     
-                    result.stats.calendar.forEach(week => {
-                        const weekDiv = document.createElement('div');
-                        weekDiv.className = 'calendar-week';
-                        
+                    // We only take the last 5 weeks for the tiny dial space
+                    const recentWeeks = result.stats.calendar.slice(-5);
+                    
+                    recentWeeks.forEach(week => {
                         week.contributionDays.forEach(day => {
                             const dayDiv = document.createElement('div');
                             dayDiv.className = 'calendar-day';
                             
-                            // Renk Seviyesi (Level 0-4)
                             let level = 0;
                             if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
                             else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
@@ -81,111 +81,58 @@ async function fetchActivity() {
                             else if (day.contributionCount >= 20) level = 4;
                             
                             dayDiv.setAttribute('data-level', level);
-                            
-                            // Global Tooltip İçin Olay Dinleyicileri
-                            const dateObj = new Date(day.date);
-                            const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-                            
-                            dayDiv.addEventListener('mouseenter', (e) => {
-                                const globalTooltip = document.getElementById('globalTooltip');
-                                globalTooltip.innerHTML = `<strong>${day.contributionCount} katkı</strong><br>${dateStr}`;
-                                
-                                const rect = dayDiv.getBoundingClientRect();
-                                // Başlangıçta görünmeden önce içeriği ekleyip yüksekliğini ölçmemiz lazım
-                                globalTooltip.style.display = 'block';
-                                
-                                globalTooltip.style.left = rect.left + (rect.width / 2) + window.scrollX + 'px';
-                                globalTooltip.style.top = rect.top + window.scrollY - globalTooltip.offsetHeight - 8 + 'px';
-                                globalTooltip.classList.add('show');
-                            });
-                            
-                            dayDiv.addEventListener('mouseleave', () => {
-                                document.getElementById('globalTooltip').classList.remove('show');
-                            });
-                            
-                            weekDiv.appendChild(dayDiv);
+                            graphContainer.appendChild(dayDiv);
                         });
-                        
-                        graphContainer.appendChild(weekDiv);
-                    });
-                    
-                    // Takvimi en sağa kaydır (En güncel güne odaklanması için)
-                    requestAnimationFrame(() => {
-                        const wrapper = graphContainer.parentElement;
-                        wrapper.scrollLeft = wrapper.scrollWidth;
                     });
                 }
 
-                const statsSec = document.getElementById('statsSection');
-                statsSec.style.display = 'block';
-                
+                // Daily Stats
+                document.getElementById('statsSection').style.display = 'block';
                 document.getElementById('statCommits').textContent = result.stats.commits;
-                const statChangedFiles = document.getElementById('statChangedFiles');
-                if (statChangedFiles) statChangedFiles.textContent = result.stats.changed_files || 0;
-                document.getElementById('statAdditions').textContent = result.stats.additions.toLocaleString('tr-TR');
-                document.getElementById('statDeletions').textContent = result.stats.deletions.toLocaleString('tr-TR');
+                if (document.getElementById('statChangedFiles')) document.getElementById('statChangedFiles').textContent = result.stats.changed_files || 0;
+                document.getElementById('statAdditions').textContent = '+' + result.stats.additions.toLocaleString('en-US');
+                document.getElementById('statDeletions').textContent = '-' + result.stats.deletions.toLocaleString('en-US');
                 document.getElementById('statRepos').textContent = result.stats.repos;
                 if (result.stats.work_time) {
-                    document.getElementById('statWorkTime').textContent = result.stats.work_time;
+                    document.getElementById('statWorkTime').textContent = result.stats.work_time.replace('dk', 'm');
                 }
                 
+                // Active Projects
                 const projectsList = document.getElementById('activeProjectsList');
                 projectsList.innerHTML = '';
                 if (result.stats.active_projects && result.stats.active_projects.length > 0) {
-                    result.stats.active_projects.forEach(project => {
-                        projectsList.insertAdjacentHTML('beforeend', `<li>${project}</li>`);
+                    result.stats.active_projects.slice(0, 5).forEach(project => {
+                        projectsList.insertAdjacentHTML('beforeend', `<li>> ${project}</li>`);
                     });
                 } else {
-                    projectsList.innerHTML = '<li style="color: var(--text-secondary); padding-left:0;">Bugün aktif proje yok</li>';
+                    projectsList.innerHTML = '<li>> System Idle</li>';
                 }
             }
 
-            // API'den gelen verileri listele
+            // Timeline Ticker
             if (result.data.length === 0) {
-                 timelineContainer.innerHTML = `
-                    <div class="activity-card" style="text-align:center; padding: 30px;">
-                        <p>Yakın zamanda bir etkinlik bulunamadı.</p>
-                    </div>`;
+                 timelineContainer.innerHTML = `<div class="ticker-item"><small>NO RECENT ACTIVITY DETECTED IN THE DATABASE.</small></div>`;
                 return;
             }
 
+            // Create a long string of activity for the ticker
+            let tickerHTML = '';
             result.data.forEach((activity, index) => {
                 const date = new Date(activity.date);
-                const formattedDate = date.toLocaleDateString('tr-TR', {
-                    day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'
-                });
+                const timeStr = date.toLocaleTimeString('en-US', { hour12: false });
+                let actionName = activity.type.replace('Event', '').toUpperCase();
 
-                // Tip ismine göre kısa kod
-                let typeCode = 'git';
-                if(activity.type === 'PushEvent') typeCode = 'Push';
-                else if(activity.type === 'CreateEvent') typeCode = 'New';
-                else if(activity.type === 'IssuesEvent') typeCode = 'Issue';
-                else if(activity.type === 'PullRequestEvent') typeCode = 'PR';
-
-                const cardHTML = `
-                    <div class="activity-card" style="animation-delay: ${index * 0.1}s">
-                        <div class="activity-icon">${typeCode}</div>
-                        <div class="activity-content">
-                            <div class="activity-header">
-                                <span class="repo-name">${activity.repo}</span>
-                                <span class="activity-time">${formattedDate}</span>
-                            </div>
-                            <div class="activity-desc">
-                                ${activity.details}
-                            </div>
-                        </div>
+                tickerHTML += `
+                    <div class="ticker-item">
+                        [${timeStr}] <span>${actionName}</span> ON <small>${activity.repo}</small> // ${activity.details}
                     </div>
                 `;
-                
-                timelineContainer.insertAdjacentHTML('beforeend', cardHTML);
             });
-
+            
+            // Duplicate the content to make infinite scroll smooth
+            timelineContainer.innerHTML = tickerHTML + tickerHTML;
         }
     } catch (error) {
-        timelineContainer.innerHTML = `
-            <div class="activity-card" style="text-align:center; padding: 30px; color: #ff7b72;">
-                <p>⚠️ API ile bağlantı kurulamadı.</p>
-                <p style="font-size: 0.8rem; margin-top:10px; color: var(--text-secondary);">${error.message}</p>
-            </div>`;
+        timelineContainer.innerHTML = `<div class="ticker-item"><span style="color:red">CONNECTION SEVERED.</span></div>`;
     }
 }
