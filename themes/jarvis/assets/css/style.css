@@ -46,11 +46,10 @@ body {
     position: fixed;
     inset: 0;
     z-index: -2;
-    background-image: 
-        radial-gradient(circle at center, rgba(0,229,255,0.03) 0%, rgba(0,0,0,0.8) 100%),
-        linear-gradient(rgba(0, 229, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 229, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 30px 30px, 30px 30px;
+    background-image: url('../images/bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     pointer-events: none;
 }
 
@@ -227,11 +226,12 @@ body {
 .text-danger { color: var(--danger-color); }
 
 .left-radar-widget {
-    position: absolute;
-    bottom: 30px;
-    left: 40px;
-    width: 200px;
-    height: 200px;
+    position: relative;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 40px;
+    width: 150px;
+    height: 150px;
 }
 .radar-outer-ring {
     width: 100%;
@@ -326,10 +326,19 @@ body {
 
 .chest-arc-reactor {
     position: absolute;
-    bottom: 150px; /* Adjust based on bust image */
+    bottom: 280px; /* Adjust based on bust image */
     left: 50%;
     transform: translateX(-50%);
-    z-index: 3;
+    z-index: 99;
+    cursor: grab;
+    transition: filter 0.3s;
+}
+.chest-arc-reactor:hover {
+    filter: drop-shadow(0 0 10px var(--jarvis-blue));
+}
+.chest-arc-reactor:active, .chest-arc-reactor.is-dragging {
+    cursor: grabbing;
+    filter: drop-shadow(0 0 20px var(--jarvis-blue));
 }
 
 /* Arc Reactor from original Jarvis */
@@ -543,14 +552,16 @@ body {
 
 .right-dial-widget {
     margin-top: auto;
-    width: 300px;
-    height: 300px;
+    width: 200px;
+    height: 200px;
     border: 2px solid rgba(255, 153, 0, 0.2);
     border-radius: 50%;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-right: 40px;
+    margin-bottom: 30px;
 }
 .calendar-wrapper {
     width: 80%;
@@ -623,4 +634,31 @@ body {
 .global-tooltip.show {
     opacity: 1;
     visibility: visible;
+}
+
+/* Fullscreen Button */
+.fullscreen-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(0, 10, 20, 0.5);
+    border: 1px solid var(--jarvis-blue);
+    color: var(--jarvis-blue);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px var(--jarvis-blue-dark);
+    backdrop-filter: blur(5px);
+}
+.fullscreen-btn:hover {
+    background: rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 15px var(--jarvis-blue-glow);
+    transform: scale(1.1);
 }

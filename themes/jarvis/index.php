@@ -18,6 +18,11 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
     <!-- Main Background HUD Overlay -->
     <div class="hud-bg-overlay"></div>
 
+    <!-- Fullscreen Toggle Button -->
+    <button id="fullscreenBtn" class="fullscreen-btn" title="Toggle Fullscreen">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
     <div class="ironman-hud-wrapper">
         
         <!-- =================== LEFT COLUMN =================== -->

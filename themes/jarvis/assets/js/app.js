@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateDateTime, 1000); // Saat ve tarih canlı aksın
     
     fetchActivity();
+    initDraggableReactor();
+    initFullscreen();
 });
 
 function updateDateTime() {
@@ -19,6 +21,116 @@ function updateDateTime() {
     // Day Name
     const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
     document.getElementById('dayText').textContent = days[now.getDay()];
+}
+
+function applyReactorPosition(isFullscreen) {
+    const reactor = document.querySelector('.chest-arc-reactor');
+    if (!reactor) return;
+    
+    const key = isFullscreen ? 'jarvis_reactor_pos_fullscreen' : 'jarvis_reactor_pos_normal';
+    const savedPos = localStorage.getItem(key);
+    
+    if (savedPos) {
+        const pos = JSON.parse(savedPos);
+        reactor.style.left = pos.left;
+        reactor.style.top = pos.top;
+        reactor.style.bottom = 'auto'; // Bottom'u iptal et ki top çalışsın
+        reactor.style.transform = 'translate(-50%, -50%)';
+    }
+}
+
+function initDraggableReactor() {
+    const reactor = document.querySelector('.chest-arc-reactor');
+    if (!reactor) return;
+
+    // Yüklendiğinde ekran moduna göre pozisyonu çek
+    applyReactorPosition(!!document.fullscreenElement);
+
+    let isDragging = false;
+
+    reactor.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        reactor.style.cursor = 'grabbing';
+        reactor.classList.add('is-dragging');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        // Ekranın neresinde olduğunu yüzde (%) olarak hesapla (Responsive için)
+        const xPercent = (e.clientX / window.innerWidth) * 100;
+        const yPercent = (e.clientY / window.innerHeight) * 100;
+
+        reactor.style.bottom = 'auto'; // Eski bottom değerini ez
+        reactor.style.left = xPercent + '%';
+        reactor.style.top = yPercent + '%';
+        reactor.style.transform = 'translate(-50%, -50%)'; // Merkeze hizala
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            reactor.style.cursor = 'grab';
+            reactor.classList.remove('is-dragging');
+
+            // Hangi ekranda olduğumuzu bul ve ona göre kaydet
+            const isFs = !!document.fullscreenElement;
+            const key = isFs ? 'jarvis_reactor_pos_fullscreen' : 'jarvis_reactor_pos_normal';
+
+            localStorage.setItem(key, JSON.stringify({
+                left: reactor.style.left,
+                top: reactor.style.top
+            }));
+            
+            showTooltip(reactor, isFs ? "Fullscreen Calibrated." : "Normal Calibrated.");
+        }
+    });
+
+    // Tam ekrana girip çıkıldığında otomatik olarak doğru konumu yükle
+    document.addEventListener('fullscreenchange', () => {
+        applyReactorPosition(!!document.fullscreenElement);
+    });
+}
+
+function showTooltip(element, text) {
+    let tooltip = document.getElementById('calibrationTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'calibrationTooltip';
+        tooltip.className = 'global-tooltip show';
+        document.body.appendChild(tooltip);
+    }
+    tooltip.textContent = text;
+    
+    const rect = element.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+    tooltip.style.top = (rect.top - 40) + 'px';
+    tooltip.style.visibility = 'visible';
+    tooltip.style.opacity = '1';
+    
+    setTimeout(() => {
+        tooltip.style.opacity = '0';
+        tooltip.style.visibility = 'hidden';
+    }, 2000);
+}
+
+function initFullscreen() {
+    const fsBtn = document.getElementById('fullscreenBtn');
+    if (!fsBtn) return;
+    
+    fsBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+            fsBtn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                fsBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+            }
+        }
+    });
 }
 
 async function fetchActivity() {
