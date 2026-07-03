@@ -199,9 +199,22 @@ function renderDialCalendar(stats) {
 
     graphContainer.innerHTML = '';
     
-    // Eğer genişletilmişse tüm yılı (52 hafta), değilse son 5 haftayı al
     const isExpanded = dial.classList.contains('expanded');
-    const weeksToRender = isExpanded ? stats.calendar : stats.calendar.slice(-5);
+    
+    if (!isExpanded) {
+        // Kapalı (yuvarlak) durumdayken sıkışık veri yerine havalı bir buton görünümü ver
+        graphContainer.innerHTML = `
+            <div style="text-align: center; color: var(--jarvis-blue); display: flex; flex-direction: column; align-items: center;">
+                <i class="fa-solid fa-calendar-week" style="font-size: 2.5rem; margin-bottom: 15px; text-shadow: 0 0 10px var(--jarvis-blue);"></i>
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; letter-spacing: 3px; color: #fff;">ARCHIVE</div>
+                <div style="font-size: 0.65rem; color: var(--jarvis-orange); margin-top: 5px; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;">[ CLICK TO EXPAND ]</div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Genişletilmişse tam yılı (52 hafta) çiz
+    const weeksToRender = stats.calendar;
     
     weeksToRender.forEach(week => {
         const colDiv = document.createElement('div');
