@@ -93,12 +93,13 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
 
             <!-- Bottom Left Radar -->
             <div class="left-radar-widget">
-                <div class="radar-outer-ring">
-                    <div class="radar-inner-ring">
-                        <div class="radar-sweep"></div>
-                        <div class="radar-center-text">JARVIS</div>
-                    </div>
-                </div>
+                <div class="radar-crosshair"></div>
+                <div class="radar-ring-1"></div>
+                <div class="radar-ring-2"></div>
+                <div class="radar-ring-3"></div>
+                <div class="radar-sweep"></div>
+                <div class="radar-center-text">J.A.R.V.I.S</div>
+                <div class="radar-dots"></div>
             </div>
         </aside>
 
