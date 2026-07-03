@@ -126,6 +126,52 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <li>MODULES</li>
             </ul>
 
+            <!-- Central Holographic Content Panels -->
+            <div class="hologram-panels-wrapper" id="hologramPanelsWrapper" style="display: none;">
+                <div class="holo-panel" id="panel-REPOSITORIES">
+                    <h3>ACTIVE REPOSITORIES</h3>
+                    <div class="panel-content" id="bigReposList"></div>
+                </div>
+
+                <div class="holo-panel" id="panel-STATISTICS">
+                    <h3>SYSTEM STATISTICS</h3>
+                    <div class="panel-content">
+                        <p class="stat-highlight">Total Commits: <span id="bigStatCommits" class="text-success">0</span></p>
+                        <div style="text-align:center; color: var(--text-muted); margin-bottom:10px;">Contribution Map (Last 5 Weeks)</div>
+                        <div class="big-calendar-wrapper" id="bigCalendarGraph" style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                            <!-- JS injected calendar -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="holo-panel" id="panel-ACTIVITY">
+                    <h3>TIMELINE EVENTS</h3>
+                    <div class="panel-content" id="bigActivityList"></div>
+                </div>
+
+                <div class="holo-panel" id="panel-SETTINGS">
+                    <h3>SYSTEM PREFERENCES</h3>
+                    <div class="panel-content">
+                        <div class="setting-item">
+                            <span>HUD Color Scheme</span>
+                            <strong class="text-success">J.A.R.V.I.S BLUE</strong>
+                        </div>
+                        <div class="setting-item">
+                            <span>Voice Interface</span>
+                            <strong class="text-danger">OFFLINE</strong>
+                        </div>
+                        <div class="setting-item">
+                            <span>Data Source</span>
+                            <strong>GITHUB API</strong>
+                        </div>
+                        <div class="setting-item">
+                            <span>Auto Refresh</span>
+                            <strong class="text-success">ENABLED</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Arc Reactor -->
             <div class="chest-arc-reactor">
                 <div class="arc-reactor">

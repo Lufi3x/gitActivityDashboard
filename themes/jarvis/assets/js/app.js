@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchActivity();
     initDraggableReactor();
     initFullscreen();
+    initNavMenu();
 });
 
 function updateDateTime() {
@@ -133,6 +134,47 @@ function initFullscreen() {
     });
 }
 
+function initNavMenu() {
+    const navButtons = document.querySelectorAll('.skew-btn');
+    const centerTitle = document.querySelector('.center-top-text h2');
+    const centerDesc = document.querySelector('.center-top-text p');
+    
+    const panelsWrapper = document.getElementById('hologramPanelsWrapper');
+    const allPanels = document.querySelectorAll('.holo-panel');
+    const arcReactor = document.querySelector('.chest-arc-reactor');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Seçili olanı değiştir
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const menuName = btn.querySelector('.skew-text').textContent;
+            
+            // Hologram Tab Mantığı
+            if (menuName === 'MAIN SYSTEM') {
+                panelsWrapper.style.display = 'none';
+                if(arcReactor) arcReactor.style.opacity = '1';
+                if(centerTitle) centerTitle.parentElement.style.display = 'block';
+            } else {
+                panelsWrapper.style.display = 'flex';
+                if(arcReactor) arcReactor.style.opacity = '0.1'; // Panelin arkasında sönük kalsın
+                if(centerTitle) centerTitle.parentElement.style.display = 'none'; // Üst yazıyı gizle ki çakışmasın
+                
+                allPanels.forEach(p => p.classList.remove('active'));
+                const targetPanel = document.getElementById('panel-' + menuName);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            }
+            
+            showTooltip(btn, "Accessing " + menuName + "...");
+        });
+    });
+}
+
 async function fetchActivity() {
     const timelineContainer = document.getElementById('activityTimeline');
 
@@ -211,24 +253,33 @@ async function fetchActivity() {
                 
                 // Active Projects
                 const projectsList = document.getElementById('activeProjectsList');
+                const bigReposList = document.getElementById('bigReposList'); // YENİ
                 projectsList.innerHTML = '';
+                bigReposList.innerHTML = ''; // YENİ
                 if (result.stats.active_projects && result.stats.active_projects.length > 0) {
                     result.stats.active_projects.slice(0, 5).forEach(project => {
                         projectsList.insertAdjacentHTML('beforeend', `<li>> ${project}</li>`);
                     });
+                    // Hologram Panel için
+                    result.stats.active_projects.forEach(project => {
+                        bigReposList.insertAdjacentHTML('beforeend', `<div class="big-repo-item"><strong>${project}</strong> <span>Active</span></div>`);
+                    });
                 } else {
                     projectsList.innerHTML = '<li>> System Idle</li>';
+                    bigReposList.innerHTML = '<div>No active modules detected.</div>';
                 }
             }
 
             // Timeline Ticker
             if (result.data.length === 0) {
                  timelineContainer.innerHTML = `<div class="ticker-item"><small>NO RECENT ACTIVITY DETECTED IN THE DATABASE.</small></div>`;
+                 document.getElementById('bigActivityList').innerHTML = '<div>No timeline events found.</div>';
                 return;
             }
 
             // Create a long string of activity for the ticker
             let tickerHTML = '';
+            let bigActivityHTML = ''; // Hologram panel için
             result.data.forEach((activity, index) => {
                 const date = new Date(activity.date);
                 const timeStr = date.toLocaleTimeString('en-US', { hour12: false });
@@ -239,10 +290,26 @@ async function fetchActivity() {
                         [${timeStr}] <span>${actionName}</span> ON <small>${activity.repo}</small> // ${activity.details}
                     </div>
                 `;
+                
+                // Hologram panel için daha şık versiyon
+                const fullDateStr = date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+                bigActivityHTML += `<div class="big-activity-item"><div class="time">[${fullDateStr}]</div><div class="details"><strong>${actionName}</strong> on ${activity.repo}<br>${activity.details}</div></div>`;
             });
             
             // Duplicate the content to make infinite scroll smooth
             timelineContainer.innerHTML = tickerHTML + tickerHTML;
+            document.getElementById('bigActivityList').innerHTML = bigActivityHTML;
+            
+            // Büyük istatistik panelini güncelle
+            if (result.stats) {
+                document.getElementById('bigStatCommits').textContent = result.stats.commits;
+                // Minik takvimi kopyala
+                const smallGraph = document.getElementById('calendarGraph');
+                if (smallGraph) {
+                    document.getElementById('bigCalendarGraph').innerHTML = smallGraph.innerHTML;
+                }
+            }
+            
         }
     } catch (error) {
         timelineContainer.innerHTML = `<div class="ticker-item"><span style="color:red">CONNECTION SEVERED.</span></div>`;
