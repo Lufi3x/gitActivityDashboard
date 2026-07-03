@@ -178,15 +178,54 @@ function initNavMenu() {
 
 function initDialClick() {
     const dial = document.getElementById('calendarSection');
-    // Find the STATISTICS button
-    const statsBtn = Array.from(document.querySelectorAll('.skew-btn')).find(b => b.querySelector('.skew-text').textContent === 'STATISTICS');
+    if (!dial) return;
     
-    if (dial && statsBtn) {
-        dial.style.cursor = 'pointer';
-        dial.addEventListener('click', () => {
-            statsBtn.click();
+    dial.style.cursor = 'pointer';
+    dial.title = 'Click to toggle full yearly data';
+    
+    dial.addEventListener('click', () => {
+        dial.classList.toggle('expanded');
+        // We need to re-render the calendar based on state
+        if (window.jarvisActivityData) {
+            renderDialCalendar(window.jarvisActivityData);
+        }
+    });
+}
+
+function renderDialCalendar(stats) {
+    const graphContainer = document.getElementById('calendarGraph');
+    const dial = document.getElementById('calendarSection');
+    if (!graphContainer || !dial || !stats.calendar) return;
+
+    graphContainer.innerHTML = '';
+    
+    // Eğer genişletilmişse tüm yılı (52 hafta), değilse son 5 haftayı al
+    const isExpanded = dial.classList.contains('expanded');
+    const weeksToRender = isExpanded ? stats.calendar : stats.calendar.slice(-5);
+    
+    weeksToRender.forEach(week => {
+        const colDiv = document.createElement('div');
+        colDiv.className = 'calendar-col';
+        colDiv.style.display = 'flex';
+        colDiv.style.flexDirection = 'column';
+        colDiv.style.gap = '2px';
+
+        week.contributionDays.forEach(day => {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            
+            let level = 0;
+            if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
+            else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
+            else if (day.contributionCount > 9 && day.contributionCount <= 19) level = 3;
+            else if (day.contributionCount >= 20) level = 4;
+            
+            dayDiv.setAttribute('data-level', level);
+            dayDiv.title = `${day.contributionCount} commits on ${day.date}`;
+            colDiv.appendChild(dayDiv);
         });
-    }
+        graphContainer.appendChild(colDiv);
+    });
 }
 
 async function fetchActivity() {
@@ -228,30 +267,12 @@ async function fetchActivity() {
                     }, 500);
                 }
                 
-                // Calendar Map
+                // Calendar Map (Dial)
                 if (result.stats.calendar && result.stats.calendar.length > 0) {
                     document.getElementById('calendarSection').style.display = 'flex';
-                    const graphContainer = document.getElementById('calendarGraph');
-                    graphContainer.innerHTML = '';
-                    
-                    // We only take the last 5 weeks for the tiny dial space
-                    const recentWeeks = result.stats.calendar.slice(-5);
-                    
-                    recentWeeks.forEach(week => {
-                        week.contributionDays.forEach(day => {
-                            const dayDiv = document.createElement('div');
-                            dayDiv.className = 'calendar-day';
-                            
-                            let level = 0;
-                            if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
-                            else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
-                            else if (day.contributionCount > 9 && day.contributionCount <= 19) level = 3;
-                            else if (day.contributionCount >= 20) level = 4;
-                            
-                            dayDiv.setAttribute('data-level', level);
-                            graphContainer.appendChild(dayDiv);
-                        });
-                    });
+                    // Store stats globally so dial click can re-render it
+                    window.jarvisActivityData = result.stats;
+                    renderDialCalendar(result.stats);
                 }
 
                 // Daily Stats

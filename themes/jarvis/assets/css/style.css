@@ -611,6 +611,23 @@ body {
     box-shadow: 0 0 20px rgba(255, 153, 0, 0.3);
     transform: scale(1.05);
 }
+.right-dial-widget.expanded {
+    width: 650px;
+    height: 180px;
+    border-radius: 10px;
+    background: rgba(0, 10, 15, 0.95);
+    backdrop-filter: blur(10px);
+    margin-right: 0;
+    margin-bottom: 20px;
+    transform: scale(1) translateX(0); /* Ignore hover scale when expanded */
+    z-index: 100;
+}
+.right-dial-widget.expanded .calendar-wrapper {
+    width: 95%;
+    height: 90%;
+    overflow-x: auto;
+    justify-content: flex-start;
+}
 .calendar-wrapper {
     width: 80%;
     height: 80%;
