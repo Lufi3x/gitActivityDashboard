@@ -1,0 +1,7 @@
+.git/
+.gitignore
+.gitftpignore
+.gitattributes
+Arşiv.zip
+.env
+.DS_Store
