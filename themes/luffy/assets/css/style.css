@@ -893,3 +893,33 @@ body {
     box-shadow: 0 0 15px var(--danger-red);
     transform: scale(1.1);
 }
+
+/* Period Selector (Günlük Rapor Seçenekleri) */
+.period-selector {
+    display: flex;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px;
+    border-radius: 5px;
+    border: 1px solid var(--panel-border);
+}
+.period-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    padding: 3px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    letter-spacing: 0.5px;
+}
+.period-btn:hover {
+    color: var(--text-primary);
+}
+.period-btn.active {
+    background: var(--danger-red);
+    color: #fff;
+    box-shadow: 0 0 5px var(--danger-red);
+}

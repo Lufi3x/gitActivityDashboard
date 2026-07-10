@@ -1,6 +1,9 @@
+let statsData = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchActivity();
     initFullscreen();
+    initPeriodSelector();
 });
 
 async function fetchActivity() {
@@ -95,25 +98,14 @@ async function fetchActivity() {
                     });
                 }
 
-                // Günlük Rapor
+                // Günlük Rapor verilerini global değişkene kaydet ve UI'ı güncelle
+                statsData = result.stats;
                 document.getElementById('statsSection').style.display = 'block';
-                document.getElementById('statCommits').textContent = result.stats.commits;
-                if (document.getElementById('statChangedFiles')) document.getElementById('statChangedFiles').textContent = result.stats.changed_files || 0;
-                document.getElementById('statAdditions').textContent = '+' + result.stats.additions.toLocaleString('tr-TR');
-                document.getElementById('statDeletions').textContent = '-' + result.stats.deletions.toLocaleString('tr-TR');
-                document.getElementById('statRepos').textContent = result.stats.repos;
-                if (result.stats.work_time) document.getElementById('statWorkTime').textContent = result.stats.work_time;
-
-                // Aktif Modüller
-                const projectsList = document.getElementById('activeProjectsList');
-                projectsList.innerHTML = '';
-                if (result.stats.active_projects && result.stats.active_projects.length > 0) {
-                    result.stats.active_projects.forEach(project => {
-                        projectsList.insertAdjacentHTML('beforeend', `<li>${project}</li>`);
-                    });
-                } else {
-                    projectsList.innerHTML = '<li style="color: var(--text-muted); font-size:0.9rem;">Bugün aktif proje yok</li>';
-                }
+                
+                // Aktif olarak hangi buton seçiliyse o periyoda göre güncelle (varsayılan: today)
+                const activeBtn = document.querySelector('.period-btn.active');
+                const currentPeriod = activeBtn ? activeBtn.getAttribute('data-period') : 'today';
+                updateStatsUI(currentPeriod);
             }
 
             // Logları listele
@@ -179,4 +171,48 @@ function initFullscreen() {
         }
     });
 }
+
+function updateStatsUI(period) {
+    if (!statsData || !statsData[period]) return;
+    
+    const pStats = statsData[period];
+    
+    document.getElementById('statCommits').textContent = pStats.commits;
+    if (document.getElementById('statChangedFiles')) {
+        document.getElementById('statChangedFiles').textContent = pStats.changed_files || 0;
+    }
+    document.getElementById('statAdditions').textContent = '+' + pStats.additions.toLocaleString('tr-TR');
+    document.getElementById('statDeletions').textContent = '-' + pStats.deletions.toLocaleString('tr-TR');
+    document.getElementById('statRepos').textContent = pStats.repos;
+    if (document.getElementById('statWorkTime')) {
+        document.getElementById('statWorkTime').textContent = pStats.work_time || "0dk";
+    }
+    
+    // Aktif Modüller
+    const projectsList = document.getElementById('activeProjectsList');
+    if (projectsList) {
+        projectsList.innerHTML = '';
+        if (pStats.active_projects && pStats.active_projects.length > 0) {
+            pStats.active_projects.forEach(project => {
+                projectsList.insertAdjacentHTML('beforeend', `<li>${project}</li>`);
+            });
+        } else {
+            projectsList.innerHTML = '<li style="color: var(--text-muted); font-size:0.9rem;">Aktif modül yok</li>';
+        }
+    }
+}
+
+function initPeriodSelector() {
+    const buttons = document.querySelectorAll('.period-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const period = btn.getAttribute('data-period');
+            updateStatsUI(period);
+        });
+    });
+}
+
 

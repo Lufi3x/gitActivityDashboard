@@ -35,6 +35,21 @@ if ($httpcode === 200) {
     
     $filtered_events = [];
     $today = date('Y-m-d');
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
+    $nowTime = time();
+    $twentyFourHoursAgo = $nowTime - (24 * 3600);
+
+    $periods = [
+        'today' => [
+            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => []
+        ],
+        'yesterday' => [
+            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => []
+        ],
+        'last_24h' => [
+            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => []
+        ]
+    ];
     
     $stats = [
         "commits" => 0,
@@ -43,23 +58,28 @@ if ($httpcode === 200) {
         "changed_files" => 0,
         "repos" => 0,
         "work_time" => "0 Dakika",
+        "active_projects" => [],
+        "today" => [],
+        "yesterday" => [],
+        "last_24h" => [],
         "weekly_commits" => 0,
         "monthly_commits" => 0,
         "yearly_commits" => 0,
-        "active_projects" => [],
         "calendar" => []
     ];
-    
-    $unique_repos_today = [];
-    $today_timestamps = [];
 
     foreach ($events as $event) {
         $type = $event['type'];
         $repoName = $event['repo']['name'];
         $createdAt = $event['created_at'];
-        $eventDate = date('Y-m-d', strtotime($createdAt));
-        $isToday = ($eventDate === $today);
+        $eventTimestamp = strtotime($createdAt);
+        $eventDate = date('Y-m-d', $eventTimestamp);
         
+        $isToday = ($eventDate === $today);
+        $isYesterday = ($eventDate === $yesterday);
+        $isLast24h = ($eventTimestamp >= $twentyFourHoursAgo);
+        
+        $isRelevant = ($isToday || $isYesterday || $isLast24h);
         $actionDetails = "";
         
         if ($type === "PushEvent") {
@@ -70,8 +90,7 @@ if ($httpcode === 200) {
             $pushDeletions = 0;
             $pushChangedFiles = 0;
             
-            // Eğer bugünse, Compare API'den hem doğru commit sayısını hem de satır değişimlerini çekelim
-            if ($isToday && isset($event['payload']['before']) && isset($event['payload']['head'])) {
+            if ($isRelevant && isset($event['payload']['before']) && isset($event['payload']['head'])) {
                 $before = $event['payload']['before'];
                 $head = $event['payload']['head'];
                 
@@ -104,35 +123,54 @@ if ($httpcode === 200) {
 
             if (count($commits) > 0) {
                 $commitMessages = array_map(function($commit) { return $commit['message'] ?? ''; }, $commits);
-                $fileInfo = ($isToday && $pushChangedFiles > 0) ? " ({$pushChangedFiles} dosya)" : "";
+                $fileInfo = ($pushChangedFiles > 0) ? " ({$pushChangedFiles} dosya)" : "";
                 $actionDetails = $commitCount . " commit{$fileInfo} pushlandı: " . implode(" | ", $commitMessages);
             } else {
                 $ref = isset($event['payload']['ref']) ? str_replace('refs/heads/', '', $event['payload']['ref']) : 'bir';
-                if ($commitCount === 0) $commitCount = 1; // Fallback
-                $fileInfo = ($isToday && $pushChangedFiles > 0) ? " ({$pushChangedFiles} dosya)" : "";
+                if ($commitCount === 0) $commitCount = 1; 
+                $fileInfo = ($pushChangedFiles > 0) ? " ({$pushChangedFiles} dosya)" : "";
                 $actionDetails = "{$commitCount} commit{$fileInfo} pushlandı ({$ref} dalına).";
             }
             
-            // İstatistiklere ekle
             if ($isToday) {
-                $stats['commits'] += $commitCount;
-                $stats['additions'] += $pushAdditions;
-                $stats['deletions'] += $pushDeletions;
-                $stats['changed_files'] += $pushChangedFiles;
-                $unique_repos_today[$repoName] = true;
+                $periods['today']['commits'] += $commitCount;
+                $periods['today']['additions'] += $pushAdditions;
+                $periods['today']['deletions'] += $pushDeletions;
+                $periods['today']['changed_files'] += $pushChangedFiles;
+                $periods['today']['unique_repos'][$repoName] = true;
+            }
+            if ($isYesterday) {
+                $periods['yesterday']['commits'] += $commitCount;
+                $periods['yesterday']['additions'] += $pushAdditions;
+                $periods['yesterday']['deletions'] += $pushDeletions;
+                $periods['yesterday']['changed_files'] += $pushChangedFiles;
+                $periods['yesterday']['unique_repos'][$repoName] = true;
+            }
+            if ($isLast24h) {
+                $periods['last_24h']['commits'] += $commitCount;
+                $periods['last_24h']['additions'] += $pushAdditions;
+                $periods['last_24h']['deletions'] += $pushDeletions;
+                $periods['last_24h']['changed_files'] += $pushChangedFiles;
+                $periods['last_24h']['unique_repos'][$repoName] = true;
             }
 
         } elseif ($type === "CreateEvent") {
             $actionDetails = $event['payload']['ref_type'] . " oluşturuldu.";
-            if ($isToday) $unique_repos_today[$repoName] = true;
+            if ($isToday) $periods['today']['unique_repos'][$repoName] = true;
+            if ($isYesterday) $periods['yesterday']['unique_repos'][$repoName] = true;
+            if ($isLast24h) $periods['last_24h']['unique_repos'][$repoName] = true;
         } elseif ($type === "WatchEvent") {
             $actionDetails = "Depo yıldızlandı.";
         } elseif ($type === "IssuesEvent") {
             $actionDetails = "Issue " . $event['payload']['action'];
-            if ($isToday) $unique_repos_today[$repoName] = true;
+            if ($isToday) $periods['today']['unique_repos'][$repoName] = true;
+            if ($isYesterday) $periods['yesterday']['unique_repos'][$repoName] = true;
+            if ($isLast24h) $periods['last_24h']['unique_repos'][$repoName] = true;
         } elseif ($type === "PullRequestEvent") {
             $actionDetails = "Pull Request " . $event['payload']['action'];
-            if ($isToday) $unique_repos_today[$repoName] = true;
+            if ($isToday) $periods['today']['unique_repos'][$repoName] = true;
+            if ($isYesterday) $periods['yesterday']['unique_repos'][$repoName] = true;
+            if ($isLast24h) $periods['last_24h']['unique_repos'][$repoName] = true;
         } else {
              $actionDetails = $type . " etkinliği";
         }
@@ -144,55 +182,89 @@ if ($httpcode === 200) {
             "details" => $actionDetails
         ];
         
-        if ($isToday) {
-            $today_timestamps[] = strtotime($createdAt);
+        if ($isToday) $periods['today']['timestamps'][] = $eventTimestamp;
+        if ($isYesterday) $periods['yesterday']['timestamps'][] = $eventTimestamp;
+        if ($isLast24h) $periods['last_24h']['timestamps'][] = $eventTimestamp;
+    }
+    
+    foreach (['today', 'yesterday', 'last_24h'] as $pKey) {
+        foreach ($periods[$pKey]['unique_repos'] as $repo => $val) {
+            $periods[$pKey]['repos']++;
+            $parts = explode('/', $repo);
+            $projectName = count($parts) > 1 ? $parts[1] : $repo;
+            $periods[$pKey]['active_projects'][] = ucfirst($projectName);
         }
-    }
-    
-    foreach ($unique_repos_today as $repo => $val) {
-        $stats['repos']++;
-        $parts = explode('/', $repo);
-        $projectName = count($parts) > 1 ? $parts[1] : $repo;
-        $stats['active_projects'][] = ucfirst($projectName);
-    }
-    
-    // Çalışma süresi hesaplama (Clustering Algorithm)
-    if (count($today_timestamps) > 0) {
-        sort($today_timestamps); // Eskiden yeniye sırala
-        $totalMinutes = 0;
-        $sessionStart = null;
-        $lastTime = null;
         
-        foreach ($today_timestamps as $time) {
-            if ($lastTime === null) {
-                $sessionStart = $time;
-                $lastTime = $time;
-            } elseif (($time - $lastTime) <= 3600) { // 60 dk boşluk kuralı
-                $lastTime = $time;
-            } else {
-                // Önceki oturumu kapat
+        if (count($periods[$pKey]['timestamps']) > 0) {
+            sort($periods[$pKey]['timestamps']);
+            $totalMinutes = 0;
+            $sessionStart = null;
+            $lastTime = null;
+            
+            foreach ($periods[$pKey]['timestamps'] as $time) {
+                if ($lastTime === null) {
+                    $sessionStart = $time;
+                    $lastTime = $time;
+                } elseif (($time - $lastTime) <= 3600) {
+                    $lastTime = $time;
+                } else {
+                    $sessionDuration = ($lastTime - $sessionStart) / 60;
+                    $totalMinutes += $sessionDuration + 30;
+                    $sessionStart = $time;
+                    $lastTime = $time;
+                }
+            }
+            if ($sessionStart !== null) {
                 $sessionDuration = ($lastTime - $sessionStart) / 60;
-                $totalMinutes += $sessionDuration + 30; // 30 dk buffer
-                $sessionStart = $time;
-                $lastTime = $time;
+                $totalMinutes += $sessionDuration + 30;
+            }
+            
+            $totalMinutes = round($totalMinutes);
+            if ($totalMinutes >= 60) {
+                $hours = floor($totalMinutes / 60);
+                $mins = $totalMinutes % 60;
+                $periods[$pKey]['work_time'] = "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
+            } else {
+                $periods[$pKey]['work_time'] = "{$totalMinutes} Dakika";
             }
         }
-        
-        // Son açık kalan oturumu kapat
-        if ($sessionStart !== null) {
-            $sessionDuration = ($lastTime - $sessionStart) / 60;
-            $totalMinutes += $sessionDuration + 30;
-        }
-        
-        $totalMinutes = round($totalMinutes);
-        if ($totalMinutes >= 60) {
-            $hours = floor($totalMinutes / 60);
-            $mins = $totalMinutes % 60;
-            $stats['work_time'] = "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
-        } else {
-            $stats['work_time'] = "{$totalMinutes} Dakika";
-        }
     }
+
+    $stats['commits'] = $periods['today']['commits'];
+    $stats['additions'] = $periods['today']['additions'];
+    $stats['deletions'] = $periods['today']['deletions'];
+    $stats['changed_files'] = $periods['today']['changed_files'];
+    $stats['repos'] = $periods['today']['repos'];
+    $stats['work_time'] = $periods['today']['work_time'];
+    $stats['active_projects'] = $periods['today']['active_projects'];
+
+    $stats['today'] = [
+        "commits" => $periods['today']['commits'],
+        "additions" => $periods['today']['additions'],
+        "deletions" => $periods['today']['deletions'],
+        "changed_files" => $periods['today']['changed_files'],
+        "repos" => $periods['today']['repos'],
+        "work_time" => $periods['today']['work_time'],
+        "active_projects" => $periods['today']['active_projects']
+    ];
+    $stats['yesterday'] = [
+        "commits" => $periods['yesterday']['commits'],
+        "additions" => $periods['yesterday']['additions'],
+        "deletions" => $periods['yesterday']['deletions'],
+        "changed_files" => $periods['yesterday']['changed_files'],
+        "repos" => $periods['yesterday']['repos'],
+        "work_time" => $periods['yesterday']['work_time'],
+        "active_projects" => $periods['yesterday']['active_projects']
+    ];
+    $stats['last_24h'] = [
+        "commits" => $periods['last_24h']['commits'],
+        "additions" => $periods['last_24h']['additions'],
+        "deletions" => $periods['last_24h']['deletions'],
+        "changed_files" => $periods['last_24h']['changed_files'],
+        "repos" => $periods['last_24h']['repos'],
+        "work_time" => $periods['last_24h']['work_time'],
+        "active_projects" => $periods['last_24h']['active_projects']
+    ];
     
     // --- GRAPHQL BÖLÜMÜ (KATKI TAKVİMİ) ---
     $graphqlUrl = "https://api.github.com/graphql";
@@ -250,7 +322,10 @@ if ($httpcode === 200) {
     }
     
     if (!$showProjects) {
-        $stats['active_projects'] = []; // Proje isimlerini siliyoruz
+        $stats['active_projects'] = [];
+        $stats['today']['active_projects'] = [];
+        $stats['yesterday']['active_projects'] = [];
+        $stats['last_24h']['active_projects'] = [];
     }
     
     $output = json_encode([

@@ -68,7 +68,14 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
             <aside class="luffy-sidebar-left">
                 <!-- Günlük Rapor Paneli -->
                 <section class="luffy-panel" id="statsSection">
-                    <h3 class="panel-header"><i class="fa-solid fa-file-contract"></i> GÜNLÜK RAPOR</h3>
+                    <h3 class="panel-header" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <span><i class="fa-solid fa-file-contract"></i> GÜNLÜK RAPOR</span>
+                        <div class="period-selector">
+                            <button class="period-btn active" data-period="today">BUGÜN</button>
+                            <button class="period-btn" data-period="yesterday">DÜN</button>
+                            <button class="period-btn" data-period="last_24h">24 SAAT</button>
+                        </div>
+                    </h3>
                     <ul class="daily-stats-list">
                         <li>
                             <div class="stat-icon anchor"><i class="fa-solid fa-anchor"></i></div>
