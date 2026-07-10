@@ -385,3 +385,33 @@ body {
     .parchment-cards { grid-template-columns: 1fr; }
     .footer-nav { flex-wrap: wrap; }
 }
+
+/* Tam Ekran Tuşu */
+.fullscreen-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(15, 5, 5, 0.85);
+    border: 2px solid var(--panel-border);
+    color: var(--text-primary);
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+.fullscreen-btn:hover {
+    background: var(--danger-red);
+    color: #fff;
+    border-color: var(--danger-red);
+    box-shadow: 0 0 15px var(--danger-red);
+    transform: scale(1.1);
+}
+

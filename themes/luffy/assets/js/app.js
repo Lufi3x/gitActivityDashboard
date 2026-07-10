@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     fetchActivity();
+    initFullscreen();
 });
 
 async function fetchActivity() {
@@ -151,3 +152,31 @@ async function fetchActivity() {
         timelineContainer.innerHTML = `<p style="color:red; text-align:center;"><i class="fa-solid fa-triangle-exclamation"></i> API Bağlantı Hatası</p>`;
     }
 }
+
+function initFullscreen() {
+    const fsBtn = document.getElementById('fullscreenBtn');
+    if (!fsBtn) return;
+    
+    fsBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Tam ekran moduna geçilirken hata oluştu: ${err.message}`);
+            });
+            fsBtn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                fsBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+            }
+        }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            fsBtn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+        } else {
+            fsBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+        }
+    });
+}
+

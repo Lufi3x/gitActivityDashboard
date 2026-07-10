@@ -18,6 +18,11 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
     <!-- Ana Arka Plan ve Efektler -->
     <div class="luffy-bg-overlay"></div>
 
+    <!-- Tam Ekran Tuşu -->
+    <button id="fullscreenBtn" class="fullscreen-btn" title="Tam Ekran Modu">
+        <i class="fa-solid fa-expand"></i>
+    </button>
+
     <div class="luffy-dashboard">
         
         <!-- ÜST BÖLÜM (HEADER) -->
