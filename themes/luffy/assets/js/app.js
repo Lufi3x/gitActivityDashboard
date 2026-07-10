@@ -10,7 +10,7 @@ async function fetchActivity() {
         const response = await fetch('api/fetch_activity.php');
         const result = await response.json();
 
-        timelineContainer.innerHTML = ''; // Temizle
+        timelineContainer.innerHTML = ''; // Temizle.
 
         if (result.error) {
             timelineContainer.innerHTML = `
@@ -21,7 +21,7 @@ async function fetchActivity() {
         }
 
         if (result.success && result.data) {
-            
+
             // Gizlilik ve Modül Ayarları
             if (result.config) {
                 if (result.config.show_system_logs === false) {
@@ -44,32 +44,32 @@ async function fetchActivity() {
                     document.getElementById('statMonthly').textContent = result.stats.monthly_commits;
                     document.getElementById('statYearly').textContent = result.stats.yearly_commits;
                 }
-                
+
                 // Katkı Takvimi
                 if (result.stats.calendar && result.stats.calendar.length > 0) {
                     document.getElementById('calendarSection').style.display = 'block';
                     const graphContainer = document.getElementById('calendarGraph');
                     graphContainer.innerHTML = '';
-                    
+
                     result.stats.calendar.forEach(week => {
                         const weekDiv = document.createElement('div');
                         weekDiv.className = 'calendar-week';
-                        
+
                         week.contributionDays.forEach(day => {
                             const dayDiv = document.createElement('div');
                             dayDiv.className = 'calendar-day';
-                            
+
                             let level = 0;
                             if (day.contributionCount > 0 && day.contributionCount <= 3) level = 1;
                             else if (day.contributionCount > 3 && day.contributionCount <= 9) level = 2;
                             else if (day.contributionCount > 9 && day.contributionCount <= 19) level = 3;
                             else if (day.contributionCount >= 20) level = 4;
-                            
+
                             dayDiv.setAttribute('data-level', level);
-                            
+
                             const dateObj = new Date(day.date);
                             const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-                            
+
                             dayDiv.addEventListener('mouseenter', (e) => {
                                 const globalTooltip = document.getElementById('globalTooltip');
                                 globalTooltip.innerHTML = `<strong>${day.contributionCount} Katkı</strong><br>${dateStr}`;
@@ -79,16 +79,16 @@ async function fetchActivity() {
                                 globalTooltip.style.top = rect.top + window.scrollY - globalTooltip.offsetHeight - 8 + 'px';
                                 globalTooltip.classList.add('show');
                             });
-                            
+
                             dayDiv.addEventListener('mouseleave', () => {
                                 document.getElementById('globalTooltip').classList.remove('show');
                             });
-                            
+
                             weekDiv.appendChild(dayDiv);
                         });
                         graphContainer.appendChild(weekDiv);
                     });
-                    
+
                     requestAnimationFrame(() => {
                         const wrapper = graphContainer.parentElement;
                         wrapper.scrollLeft = wrapper.scrollWidth;
@@ -103,7 +103,7 @@ async function fetchActivity() {
                 document.getElementById('statDeletions').textContent = '-' + result.stats.deletions.toLocaleString('tr-TR');
                 document.getElementById('statRepos').textContent = result.stats.repos;
                 if (result.stats.work_time) document.getElementById('statWorkTime').textContent = result.stats.work_time;
-                
+
                 // Aktif Modüller
                 const projectsList = document.getElementById('activeProjectsList');
                 projectsList.innerHTML = '';
@@ -118,18 +118,18 @@ async function fetchActivity() {
 
             // Logları listele
             if (result.data.length === 0) {
-                 timelineContainer.innerHTML = `<p style="padding: 20px; text-align:center; color: var(--text-muted);">Hareket bulunamadı.</p>`;
+                timelineContainer.innerHTML = `<p style="padding: 20px; text-align:center; color: var(--text-muted);">Hareket bulunamadı.</p>`;
                 return;
             }
 
             result.data.forEach((activity, index) => {
                 const date = new Date(activity.date);
-                const timeStr = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute:'2-digit', second:'2-digit' });
+                const timeStr = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
                 let typeCode = '<i class="fa-solid fa-arrows-up-down"></i>';
-                if(activity.type === 'PushEvent') typeCode = '<i class="fa-solid fa-arrow-up"></i>';
-                else if(activity.type === 'CreateEvent') typeCode = '<i class="fa-solid fa-star"></i>';
-                else if(activity.type === 'PullRequestEvent') typeCode = '<i class="fa-solid fa-code-pull-request"></i>';
+                if (activity.type === 'PushEvent') typeCode = '<i class="fa-solid fa-arrow-up"></i>';
+                else if (activity.type === 'CreateEvent') typeCode = '<i class="fa-solid fa-star"></i>';
+                else if (activity.type === 'PullRequestEvent') typeCode = '<i class="fa-solid fa-code-pull-request"></i>';
 
                 let actionName = activity.type.replace('Event', '').toUpperCase();
 
@@ -156,7 +156,7 @@ async function fetchActivity() {
 function initFullscreen() {
     const fsBtn = document.getElementById('fullscreenBtn');
     if (!fsBtn) return;
-    
+
     fsBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
