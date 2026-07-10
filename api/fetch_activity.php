@@ -201,22 +201,40 @@ if ($httpcode === 200) {
             $sessionStart = null;
             $lastTime = null;
             
+            // Maksimum iki commit arası boşluk (oturumun devam etmesi için): 3 saat (10800 saniye)
+            $maxGap = 3 * 3600; 
+            // Her oturum için varsayılan asgari çalışma süresi (hazırlık süresi): 45 dakika
+            $minSessionMinutes = 45;
+            // Oturum sonuna eklenen geliştirme payı (post-session buffer): 30 dakika
+            $postSessionBuffer = 30;
+            
             foreach ($periods[$pKey]['timestamps'] as $time) {
                 if ($lastTime === null) {
                     $sessionStart = $time;
                     $lastTime = $time;
-                } elseif (($time - $lastTime) <= 3600) {
+                } elseif (($time - $lastTime) <= $maxGap) {
                     $lastTime = $time;
                 } else {
-                    $sessionDuration = ($lastTime - $sessionStart) / 60;
-                    $totalMinutes += $sessionDuration + 30;
+                    $sessionDurationMinutes = ($lastTime - $sessionStart) / 60;
+                    if ($sessionDurationMinutes < $minSessionMinutes) {
+                        $sessionDurationMinutes = $minSessionMinutes;
+                    } else {
+                        $sessionDurationMinutes += $postSessionBuffer;
+                    }
+                    $totalMinutes += $sessionDurationMinutes;
+                    
                     $sessionStart = $time;
                     $lastTime = $time;
                 }
             }
             if ($sessionStart !== null) {
-                $sessionDuration = ($lastTime - $sessionStart) / 60;
-                $totalMinutes += $sessionDuration + 30;
+                $sessionDurationMinutes = ($lastTime - $sessionStart) / 60;
+                if ($sessionDurationMinutes < $minSessionMinutes) {
+                    $sessionDurationMinutes = $minSessionMinutes;
+                } else {
+                    $sessionDurationMinutes += $postSessionBuffer;
+                }
+                $totalMinutes += $sessionDurationMinutes;
             }
             
             $totalMinutes = round($totalMinutes);
