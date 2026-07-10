@@ -3,19 +3,23 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
 ?>
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Korsan Kralı - GitHub Paneli</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pirata+One&family=Roboto+Condensed:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pirata+One&family=Roboto+Condensed:wght@400;700&family=Permanent+Marker&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome Eklendi -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="themes/luffy/assets/css/style.css?v=2">
 </head>
+
 <body class="<?= htmlspecialchars($defaultTheme) ?>">
-    <!-- Ana Arka Plan ve Efektler -->
+    <!-- Ana Arka Plan ve Efektler. -->
     <div class="luffy-bg-overlay"></div>
 
     <!-- Tam Ekran Tuşu -->
@@ -24,7 +28,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
     </button>
 
     <div class="luffy-dashboard">
-        
+
         <!-- ÜST BÖLÜM (HEADER) -->
         <header class="luffy-header">
             <div class="header-left"></div>
@@ -37,7 +41,9 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                             <span class="status-text">AKTİF</span>
                             <div class="heartbeat-line">
                                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" style="width:100%; height:100%;">
-                                    <path d="M0,15 L30,15 L35,5 L45,25 L55,0 L65,25 L70,15 L100,15" stroke="var(--danger-red)" stroke-width="2" fill="none" vector-effect="non-scaling-stroke"/>
+                                    <path d="M0,15 L30,15 L35,5 L45,25 L55,0 L65,25 L70,15 L100,15"
+                                        stroke="var(--danger-red)" stroke-width="2" fill="none"
+                                        vector-effect="non-scaling-stroke" />
                                 </svg>
                             </div>
                         </div>
@@ -57,7 +63,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
 
         <!-- ANA İÇERİK (ÜÇ KOLONLU YAPI) -->
         <main class="luffy-main">
-            
+
             <!-- SOL KOLON -->
             <aside class="luffy-sidebar-left">
                 <!-- Günlük Rapor Paneli -->
@@ -208,4 +214,5 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
     <div id="globalTooltip" class="global-tooltip"></div>
     <script src="themes/luffy/assets/js/app.js"></script>
 </body>
+
 </html>
