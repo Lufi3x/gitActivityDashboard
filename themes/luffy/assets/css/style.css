@@ -78,6 +78,8 @@ body {
     background-repeat: no-repeat;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
     overflow: hidden;
+    max-width: 100%;
+    width: 100%;
 }
 
 .luffy-header::after {
@@ -389,6 +391,8 @@ body {
     display: grid;
     grid-template-columns: 320px minmax(0, 1fr) 350px;
     gap: 20px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .mt-20 {
@@ -404,6 +408,8 @@ body {
     position: relative;
     max-width: 100%;
     width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .luffy-panel::before {
@@ -592,6 +598,9 @@ body {
 .calendar-wrapper {
     padding: 20px;
     overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .calendar-graph {
