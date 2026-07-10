@@ -849,6 +849,9 @@ body {
 @media (max-width: 992px) {
     .luffy-main {
         grid-template-columns: 1fr;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
     }
 
     .header-center {
@@ -860,6 +863,9 @@ body {
         align-items: center;
         gap: 20px;
         text-align: center;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
     }
 
     .header-left {
@@ -869,10 +875,25 @@ body {
 
     .parchment-cards {
         grid-template-columns: 1fr;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .footer-nav {
         flex-wrap: wrap;
+    }
+
+    .luffy-sidebar-left,
+    .luffy-center-col,
+    .luffy-sidebar-right,
+    .luffy-panel,
+    .calendar-panel,
+    #calendarSection,
+    #longTermStatsSection {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
     }
 }
 
