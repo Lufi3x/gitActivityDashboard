@@ -57,6 +57,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: hidden;
 }
 
 /* ================= HEADER ================= */
@@ -401,6 +402,8 @@ body {
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
     position: relative;
+    max-width: 100%;
+    width: 100%;
 }
 
 .luffy-panel::before {
@@ -861,6 +864,96 @@ body {
 
     .footer-nav {
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .luffy-dashboard {
+        padding: 10px;
+        gap: 15px;
+    }
+    .luffy-main {
+        gap: 15px;
+    }
+    .luffy-header {
+        min-height: auto;
+        padding: 15px;
+        background-size: cover;
+        background-position: center;
+    }
+    .header-left {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    .wanted-poster {
+        transform: none;
+        width: 120px;
+    }
+    .main-title {
+        font-size: 2.2rem;
+        text-align: center;
+        transform: none;
+    }
+    .dashboard-text {
+        font-size: 2rem;
+        text-align: center;
+    }
+    .system-status-box {
+        width: 100%;
+        clip-path: none;
+    }
+    .system-status-box::before, .system-status-box::after {
+        clip-path: none;
+    }
+    .luffy-footer {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    .footer-nav {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+    }
+    .nav-item {
+        padding: 10px 5px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .footer-quote {
+        width: 100%;
+        font-size: 0.95rem;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .period-selector {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .period-btn {
+        flex: 1;
+        text-align: center;
+    }
+    .footer-nav {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .activity-card {
+        gap: 10px;
+    }
+    .activity-content {
+        padding: 8px;
+    }
+    .activity-desc {
+        font-size: 0.85rem;
     }
 }
 
