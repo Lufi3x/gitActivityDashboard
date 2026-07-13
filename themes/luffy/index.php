@@ -185,9 +185,9 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                     </div>
                 </section>
 
-                <!-- Ortalama İstatistikler Paneli -->
+                <!-- İstatistikler Paneli -->
                 <section class="luffy-panel avg-stats-panel" id="avgStatsSection" style="display: none;">
-                    <h3 class="panel-header"><i class="fa-solid fa-chart-pie"></i> GENEL ORTALAMALAR</h3>
+                    <h3 class="panel-header"><i class="fa-solid fa-chart-pie"></i> DETAYLI İSTATİSTİKLER</h3>
                     <div class="avg-stats-container">
                         <!-- Ortalama Çalışma Süreleri Parşömeni -->
                         <div class="parchment-card avg-card">
@@ -208,24 +208,64 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                                 <div class="card-desc">- AKTİF KODLAMA -</div>
                             </div>
                         </div>
+
+                        <!-- Gerçek Toplam Çalışma Süreleri Parşömeni -->
+                        <div class="parchment-card avg-card">
+                            <div class="card-inner">
+                                <h4 class="card-title"><i class="fa-solid fa-clock"></i> TOPLAM ÇALIŞMA SÜRESİ</h4>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BUGÜN:</span>
+                                    <span class="avg-val" id="realTodayWorkTime">0dk</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BU HAFTA:</span>
+                                    <span class="avg-val" id="realWeeklyWorkTime">0dk</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BU AY (AKTİVİTE):</span>
+                                    <span class="avg-val" id="realMonthlyWorkTime">0dk</span>
+                                </div>
+                                <div class="card-desc">- GERÇEKLEŞEN SÜRELER -</div>
+                            </div>
+                        </div>
                         
                         <!-- Ortalama Katkı / Commit Parşömeni -->
                         <div class="parchment-card avg-card">
                             <div class="card-inner">
-                                <h4 class="card-title"><i class="fa-solid fa-anchor"></i> ORTALAMA KATKI (COMMIT)</h4>
+                                <h4 class="card-title"><i class="fa-solid fa-calculator"></i> ORTALAMA KATKI (COMMIT)</h4>
                                 <div class="avg-stat-row">
-                                    <span class="avg-label">GÜNLÜK (30 GÜN):</span>
+                                    <span class="avg-label">GÜNLÜK:</span>
                                     <span class="avg-val" id="avgDailyCommits">0</span>
                                 </div>
                                 <div class="avg-stat-row">
-                                    <span class="avg-label">HAFTALIK (YILLIK):</span>
+                                    <span class="avg-label">HAFTALIK:</span>
                                     <span class="avg-val" id="avgWeeklyCommits">0</span>
                                 </div>
                                 <div class="avg-stat-row">
-                                    <span class="avg-label">AYLIK (YILLIK):</span>
+                                    <span class="avg-label">AYLIK:</span>
                                     <span class="avg-val" id="avgMonthlyCommits">0</span>
                                 </div>
-                                <div class="card-desc">- GÖNDERİLEN RAPORLAR -</div>
+                                <div class="card-desc">- ORTALAMA RAPORLAR -</div>
+                            </div>
+                        </div>
+
+                        <!-- Gerçek Toplam Commit Parşömeni -->
+                        <div class="parchment-card avg-card">
+                            <div class="card-inner">
+                                <h4 class="card-title"><i class="fa-solid fa-anchor"></i> TOPLAM KATKI (COMMIT)</h4>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BUGÜN:</span>
+                                    <span class="avg-val" id="realTodayCommits">0</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BU HAFTA:</span>
+                                    <span class="avg-val" id="realWeeklyCommits">0</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BU AY:</span>
+                                    <span class="avg-val" id="realMonthlyCommits">0</span>
+                                </div>
+                                <div class="card-desc">- GERÇEKLEŞEN RAPORLAR -</div>
                             </div>
                         </div>
                     </div>

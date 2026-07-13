@@ -49,9 +49,11 @@ async function fetchActivity() {
                     document.getElementById('statYearly').textContent = result.stats.yearly_commits;
                 }
 
-                // Ortalama İstatistikler (Çalışma süresi ve commit)
+                // Detaylı İstatistikler (Ortalamalar ve Gerçek Toplamlar)
                 if (result.stats.avg_daily_work_time_str !== undefined) {
                     document.getElementById('avgStatsSection').style.display = 'block';
+                    
+                    // Ortalamalar
                     document.getElementById('avgDailyWorkTime').textContent = result.stats.avg_daily_work_time_str;
                     document.getElementById('avgWeeklyWorkTime').textContent = result.stats.avg_weekly_work_time_str;
                     document.getElementById('avgMonthlyWorkTime').textContent = result.stats.avg_monthly_work_time_str;
@@ -59,6 +61,20 @@ async function fetchActivity() {
                     document.getElementById('avgDailyCommits').textContent = result.stats.avg_daily_commits;
                     document.getElementById('avgWeeklyCommits').textContent = result.stats.avg_weekly_commits;
                     document.getElementById('avgMonthlyCommits').textContent = result.stats.avg_monthly_commits;
+
+                    // Gerçek Toplam Süreler
+                    if (document.getElementById('realTodayWorkTime')) {
+                        document.getElementById('realTodayWorkTime').textContent = result.stats.real_today_work_time_str || "0dk";
+                        document.getElementById('realWeeklyWorkTime').textContent = result.stats.real_weekly_work_time_str || "0dk";
+                        document.getElementById('realMonthlyWorkTime').textContent = result.stats.real_monthly_work_time_str || "0dk";
+                    }
+
+                    // Gerçek Toplam Commitler
+                    if (document.getElementById('realTodayCommits')) {
+                        document.getElementById('realTodayCommits').textContent = result.stats.today ? (result.stats.today.commits || 0) : 0;
+                        document.getElementById('realWeeklyCommits').textContent = result.stats.weekly_commits || 0;
+                        document.getElementById('realMonthlyCommits').textContent = result.stats.monthly_commits || 0;
+                    }
                 }
 
                 // Katkı Takvimi

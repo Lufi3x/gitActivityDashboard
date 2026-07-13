@@ -71,7 +71,10 @@ if ($httpcode === 200) {
         "avg_monthly_work_time_str" => "0 Dakika",
         "avg_daily_commits" => 0,
         "avg_weekly_commits" => 0,
-        "avg_monthly_commits" => 0
+        "avg_monthly_commits" => 0,
+        "real_today_work_time_str" => "0 Dakika",
+        "real_weekly_work_time_str" => "0 Dakika",
+        "real_monthly_work_time_str" => "0 Dakika"
     ];
 
     foreach ($events as $event) {
@@ -432,6 +435,25 @@ if ($httpcode === 200) {
             $stats['avg_daily_commits'] = round($monthlyCommitsTotal / 30, 1);
             $stats['avg_weekly_commits'] = round(($monthlyCommitsTotal / 30) * 7, 1);
             $stats['avg_monthly_commits'] = round($monthlyCommitsTotal, 1);
+
+            // Gerçek Toplam Sürelerin hesaplanması
+            $todayDate = date('Y-m-d');
+            $realTodayMins = isset($dailyWorkDurations[$todayDate]) ? $dailyWorkDurations[$todayDate] : 0;
+            
+            $realWeeklyWorkMinutes = 0;
+            $sevenDaysAgoStr = date('Y-m-d', strtotime('-7 days'));
+            if (isset($dailyWorkDurations) && is_array($dailyWorkDurations)) {
+                foreach ($dailyWorkDurations as $date => $mins) {
+                    if ($date >= $sevenDaysAgoStr) {
+                        $realWeeklyWorkMinutes += $mins;
+                    }
+                }
+            }
+            $realMonthlyWorkMinutes = isset($dailyWorkDurations) ? array_sum($dailyWorkDurations) : 0;
+
+            $stats['real_today_work_time_str'] = $formatTime($realTodayMins);
+            $stats['real_weekly_work_time_str'] = $formatTime($realWeeklyWorkMinutes);
+            $stats['real_monthly_work_time_str'] = $formatTime($realMonthlyWorkMinutes);
         }
     }
     
