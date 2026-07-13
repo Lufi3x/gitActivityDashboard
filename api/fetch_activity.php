@@ -247,7 +247,14 @@ if ($httpcode === 200) {
     $totalActiveDays = count($dailyWorkDurations);
     $avgDailyWorkMinutes = 0;
     if ($totalActiveDays > 0) {
-        $avgDailyWorkMinutes = round(array_sum($dailyWorkDurations) / $totalActiveDays);
+        $eventDates = array_keys($dailyWorkDurations);
+        sort($eventDates);
+        $earliestDate = new DateTime(min($eventDates));
+        $latestDate = new DateTime(max($eventDates));
+        $daySpan = $earliestDate->diff($latestDate)->days + 1;
+        if ($daySpan <= 0) $daySpan = 1;
+        
+        $avgDailyWorkMinutes = round(array_sum($dailyWorkDurations) / $daySpan);
     }
     
     foreach (['today', 'yesterday', 'last_24h'] as $pKey) {
@@ -403,11 +410,8 @@ if ($httpcode === 200) {
             // Ortalama çalışma sürelerini ve commit'leri hesaplayalım
             $avgDailyMinutes = isset($avgDailyWorkMinutes) ? $avgDailyWorkMinutes : 0;
             
-            $estWeeklyDays = ($activeDaysLast7 > 0) ? $activeDaysLast7 : (($totalActiveDays > 0) ? min(5, $totalActiveDays) : 0);
-            $estMonthlyDays = ($activeDaysLast30 > 0) ? $activeDaysLast30 : (($totalActiveDays > 0) ? min(22, $totalActiveDays * 4) : 0);
-            
-            $avgWeeklyMinutes = $estWeeklyDays * $avgDailyMinutes;
-            $avgMonthlyMinutes = $estMonthlyDays * $avgDailyMinutes;
+            $avgWeeklyMinutes = $avgDailyMinutes * 7;
+            $avgMonthlyMinutes = $avgDailyMinutes * 30;
             
             $formatTime = function($totalMins) {
                 if ($totalMins <= 0) return "0 Dakika";
@@ -423,9 +427,11 @@ if ($httpcode === 200) {
             $stats['avg_weekly_work_time_str'] = $formatTime($avgWeeklyMinutes);
             $stats['avg_monthly_work_time_str'] = $formatTime($avgMonthlyMinutes);
             
-            $stats['avg_daily_commits'] = round($stats['monthly_commits'] / 30, 1);
-            $stats['avg_weekly_commits'] = round(($calendar['totalContributions'] ?? 0) / 52, 1);
-            $stats['avg_monthly_commits'] = round(($calendar['totalContributions'] ?? 0) / 12, 1);
+            // Commit ortalamaları (Tam 1:7:30 oranları ile, son 30 gün bazında)
+            $monthlyCommitsTotal = $stats['monthly_commits'] ?? 0;
+            $stats['avg_daily_commits'] = round($monthlyCommitsTotal / 30, 1);
+            $stats['avg_weekly_commits'] = round(($monthlyCommitsTotal / 30) * 7, 1);
+            $stats['avg_monthly_commits'] = round($monthlyCommitsTotal, 1);
         }
     }
     
