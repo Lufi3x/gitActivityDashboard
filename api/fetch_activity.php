@@ -454,28 +454,28 @@ if ($httpcode === 200) {
                 }
                 return "{$totalMins} Dakika";
             };
+            // ========================================================
+            // ORTALAMA KATKI (COMMIT) - Son 30 güne göre günlük
+            // ========================================================
+            $stats['avg_daily_commits'] = round($stats['monthly_commits'] / 30, 1);
 
             // ========================================================
-            // ORTALAMA KATKI (COMMIT) - Yıllık toplama göre
+            // ORTALAMA ÇALIŞMA SÜRESİ - Son 30 güne göre günlük
             // ========================================================
-            $yearlyTotal = $calendar['totalContributions'] ?? 0;
-            $stats['avg_daily_commits'] = round($yearlyTotal / 365, 1);
-            $stats['avg_weekly_commits'] = round($yearlyTotal / 52, 1);
-            $stats['avg_monthly_commits'] = round($yearlyTotal / 12, 1);
-
-            // ========================================================
-            // ORTALAMA ÇALIŞMA SÜRESİ - Yıllık ortalama x oran
-            // ========================================================
-            $avgDailyCommits = $yearlyTotal / 365;
+            $avgDailyCommits = $stats['monthly_commits'] / 30;
             $avgDailyMinutes = round($avgDailyCommits * $minutesPerContrib);
             $stats['avg_daily_work_time_str'] = $formatTime($avgDailyMinutes);
-            $stats['avg_weekly_work_time_str'] = $formatTime($avgDailyMinutes * 7);
-            $stats['avg_monthly_work_time_str'] = $formatTime($avgDailyMinutes * 30);
 
             // ========================================================
-            // TOPLAM ÇALIŞMA SÜRESİ (Gerçekleşen) - GraphQL x oran
+            // TOPLAM ÇALIŞMA SÜRESİ (Gerçekleşen)
             // ========================================================
-            $stats['real_today_work_time_str'] = $formatTime($todayContribs * $minutesPerContrib);
+            // Bugün için events-based gerçek session süresini kullan
+            // (sol paneldeki SİSTEM SÜRESİ ile tutarlı olması için)
+            $realTodayMins = isset($dailyWorkDurations[$todayDate]) 
+                ? $dailyWorkDurations[$todayDate] 
+                : ($todayContribs * $minutesPerContrib);
+            $stats['real_today_work_time_str'] = $formatTime($realTodayMins);
+            // Hafta ve ay için GraphQL x oran (events bu kadar geriye gitmiyor)
             $stats['real_weekly_work_time_str'] = $formatTime($stats['weekly_commits'] * $minutesPerContrib);
             $stats['real_monthly_work_time_str'] = $formatTime($stats['monthly_commits'] * $minutesPerContrib);
         }

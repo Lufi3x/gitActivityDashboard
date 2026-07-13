@@ -189,27 +189,18 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <section class="luffy-panel avg-stats-panel" id="avgStatsSection" style="display: none;">
                     <h3 class="panel-header"><i class="fa-solid fa-chart-pie"></i> DETAYLI İSTATİSTİKLER</h3>
                     <div class="avg-stats-container">
-                        <!-- Ortalama Çalışma Süreleri Parşömeni -->
+                        <!-- Ortalama Çalışma Süresi (Günlük) -->
                         <div class="parchment-card avg-card">
                             <div class="card-inner">
-                                <h4 class="card-title"><i class="fa-solid fa-hourglass-half"></i> ORTALAMA ÇALIŞMA SÜRESİ</h4>
-                                <div class="avg-stat-row">
-                                    <span class="avg-label">GÜNLÜK:</span>
-                                    <span class="avg-val" id="avgDailyWorkTime">0dk</span>
+                                <h4 class="card-title"><i class="fa-solid fa-hourglass-half"></i> GÜNLÜK ORT. ÇALIŞMA</h4>
+                                <div class="avg-stat-row single-row">
+                                    <span class="avg-val big-val" id="avgDailyWorkTime">0dk</span>
                                 </div>
-                                <div class="avg-stat-row">
-                                    <span class="avg-label">HAFTALIK:</span>
-                                    <span class="avg-val" id="avgWeeklyWorkTime">0dk</span>
-                                </div>
-                                <div class="avg-stat-row">
-                                    <span class="avg-label">AYLIK:</span>
-                                    <span class="avg-val" id="avgMonthlyWorkTime">0dk</span>
-                                </div>
-                                <div class="card-desc">- AKTİF KODLAMA -</div>
+                                <div class="card-desc">- SON 30 GÜN ORTALAMASI -</div>
                             </div>
                         </div>
 
-                        <!-- Gerçek Toplam Çalışma Süreleri Parşömeni -->
+                        <!-- Toplam Çalışma Süreleri -->
                         <div class="parchment-card avg-card">
                             <div class="card-inner">
                                 <h4 class="card-title"><i class="fa-solid fa-clock"></i> TOPLAM ÇALIŞMA SÜRESİ</h4>
@@ -222,30 +213,21 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                                     <span class="avg-val" id="realWeeklyWorkTime">0dk</span>
                                 </div>
                                 <div class="avg-stat-row">
-                                    <span class="avg-label">BU AY (AKTİVİTE):</span>
+                                    <span class="avg-label">BU AY:</span>
                                     <span class="avg-val" id="realMonthlyWorkTime">0dk</span>
                                 </div>
                                 <div class="card-desc">- GERÇEKLEŞEN SÜRELER -</div>
                             </div>
                         </div>
                         
-                        <!-- Ortalama Katkı / Commit Parşömeni -->
+                        <!-- Ortalama Katkı (Günlük) -->
                         <div class="parchment-card avg-card">
                             <div class="card-inner">
-                                <h4 class="card-title"><i class="fa-solid fa-calculator"></i> ORTALAMA KATKI (COMMIT)</h4>
-                                <div class="avg-stat-row">
-                                    <span class="avg-label">GÜNLÜK:</span>
-                                    <span class="avg-val" id="avgDailyCommits">0</span>
+                                <h4 class="card-title"><i class="fa-solid fa-calculator"></i> GÜNLÜK ORT. KATKI</h4>
+                                <div class="avg-stat-row single-row">
+                                    <span class="avg-val big-val" id="avgDailyCommits">0</span>
                                 </div>
-                                <div class="avg-stat-row">
-                                    <span class="avg-label">HAFTALIK:</span>
-                                    <span class="avg-val" id="avgWeeklyCommits">0</span>
-                                </div>
-                                <div class="avg-stat-row">
-                                    <span class="avg-label">AYLIK:</span>
-                                    <span class="avg-val" id="avgMonthlyCommits">0</span>
-                                </div>
-                                <div class="card-desc">- ORTALAMA RAPORLAR -</div>
+                                <div class="card-desc">- SON 30 GÜN ORTALAMASI -</div>
                             </div>
                         </div>
 
