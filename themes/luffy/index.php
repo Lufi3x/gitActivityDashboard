@@ -184,6 +184,68 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                         <span>MAKS</span>
                     </div>
                 </section>
+
+                <!-- Ortalama İstatistikler Paneli -->
+                <section class="luffy-panel avg-stats-panel" id="avgStatsSection" style="display: none;">
+                    <h3 class="panel-header"><i class="fa-solid fa-chart-pie"></i> GENEL ORTALAMALAR</h3>
+                    <div class="avg-stats-container">
+                        <!-- Ortalama Çalışma Süreleri Parşömeni -->
+                        <div class="parchment-card avg-card">
+                            <div class="card-inner">
+                                <h4 class="card-title"><i class="fa-solid fa-hourglass-half"></i> ORTALAMA ÇALIŞMA SÜRESİ</h4>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">GÜNLÜK:</span>
+                                    <span class="avg-val" id="avgDailyWorkTime">0dk</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">HAFTALIK:</span>
+                                    <span class="avg-val" id="avgWeeklyWorkTime">0dk</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">AYLIK:</span>
+                                    <span class="avg-val" id="avgMonthlyWorkTime">0dk</span>
+                                </div>
+                                <div class="card-desc">- AKTİF KODLAMA -</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ortalama Katkı / Commit Parşömeni -->
+                        <div class="parchment-card avg-card">
+                            <div class="card-inner">
+                                <h4 class="card-title"><i class="fa-solid fa-anchor"></i> ORTALAMA KATKI (COMMIT)</h4>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">GÜNLÜK (30 GÜN):</span>
+                                    <span class="avg-val" id="avgDailyCommits">0</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">HAFTALIK (YILLIK):</span>
+                                    <span class="avg-val" id="avgWeeklyCommits">0</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">AYLIK (YILLIK):</span>
+                                    <span class="avg-val" id="avgMonthlyCommits">0</span>
+                                </div>
+                                <div class="card-desc">- GÖNDERİLEN RAPORLAR -</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Ayarlar Paneli -->
+                <section class="luffy-panel settings-panel" id="settingsSection" style="display: none;">
+                    <h3 class="panel-header"><i class="fa-solid fa-gear"></i> PANEL AYARLARI</h3>
+                    <div style="padding: 20px;">
+                        <h4 style="color: var(--danger-red); margin-bottom: 10px; font-family: 'Permanent Marker', cursive;">KORSAN TAYFASI BİLGİ SİSTEMİ</h4>
+                        <p style="color: var(--text-primary); line-height: 1.6; margin-bottom: 15px;">
+                            Bu panel, Monkey D. Luffy ve Hasır Şapka Korsanları temasıyla tasarlanmış bir GitHub Aktivite Takip Sistemidir.
+                        </p>
+                        <div style="background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 5px; border: 1px solid var(--panel-border);">
+                            <p style="margin-bottom: 8px;"><strong>Aktif Tema:</strong> <span style="color: var(--danger-red);">Luffy (Korsan Kralı)</span></p>
+                            <p style="margin-bottom: 8px;"><strong>Veri Kaynağı:</strong> GitHub REST & GraphQL API</p>
+                            <p><strong>Durum:</strong> Tayfa hazır, yelkenler fora!</p>
+                        </div>
+                    </div>
+                </section>
             </section>
 
             <!-- SAĞ KOLON -->
@@ -204,11 +266,11 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
         <!-- ALT BAR (FOOTER SEKMELERİ) -->
         <footer class="luffy-footer">
             <nav class="footer-nav">
-                <a href="#" class="nav-item active"><i class="fa-solid fa-compass"></i> ANA SAYFA</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-book-journal-whills"></i> REPOLAR</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-chart-simple"></i> İSTATİSTİKLER</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-anchor"></i> AKTİVİTE</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> AYARLAR</a>
+                <a href="#" class="nav-item active" data-tab="home"><i class="fa-solid fa-compass"></i> ANA SAYFA</a>
+                <a href="#" class="nav-item" data-tab="repos"><i class="fa-solid fa-book-journal-whills"></i> REPOLAR</a>
+                <a href="#" class="nav-item" data-tab="stats"><i class="fa-solid fa-chart-simple"></i> İSTATİSTİKLER</a>
+                <a href="#" class="nav-item" data-tab="activity"><i class="fa-solid fa-anchor"></i> AKTİVİTE</a>
+                <a href="#" class="nav-item" data-tab="settings"><i class="fa-solid fa-gear"></i> AYARLAR</a>
             </nav>
             <div class="footer-quote">
                 "HAYALLERİ OLAN İNSANLAR,<br>ASLA GERÇEKLERDEN KAÇMAZLAR!"<br>

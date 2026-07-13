@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchActivity();
     initFullscreen();
     initPeriodSelector();
+    initTabs();
 });
 
 async function fetchActivity() {
@@ -46,6 +47,18 @@ async function fetchActivity() {
                     document.getElementById('statWeekly').textContent = result.stats.weekly_commits;
                     document.getElementById('statMonthly').textContent = result.stats.monthly_commits;
                     document.getElementById('statYearly').textContent = result.stats.yearly_commits;
+                }
+
+                // Ortalama İstatistikler (Çalışma süresi ve commit)
+                if (result.stats.avg_daily_work_time_str !== undefined) {
+                    document.getElementById('avgStatsSection').style.display = 'block';
+                    document.getElementById('avgDailyWorkTime').textContent = result.stats.avg_daily_work_time_str;
+                    document.getElementById('avgWeeklyWorkTime').textContent = result.stats.avg_weekly_work_time_str;
+                    document.getElementById('avgMonthlyWorkTime').textContent = result.stats.avg_monthly_work_time_str;
+                    
+                    document.getElementById('avgDailyCommits').textContent = result.stats.avg_daily_commits;
+                    document.getElementById('avgWeeklyCommits').textContent = result.stats.avg_weekly_commits;
+                    document.getElementById('avgMonthlyCommits').textContent = result.stats.avg_monthly_commits;
                 }
 
                 // Katkı Takvimi
@@ -211,6 +224,35 @@ function initPeriodSelector() {
             
             const period = btn.getAttribute('data-period');
             updateStatsUI(period);
+        });
+    });
+}
+
+function initTabs() {
+    const navItems = document.querySelectorAll('.footer-nav .nav-item');
+    const dashboard = document.querySelector('.luffy-dashboard');
+    
+    // Varsayılan olarak home tab sınıfını ekleyelim
+    if (dashboard && !dashboard.classList.contains('tab-home')) {
+        dashboard.classList.add('tab-home');
+    }
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            const tab = item.getAttribute('data-tab');
+            if (!tab) return;
+            
+            // Navigasyon butonlarının aktifliğini güncelle
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Dashboard üzerindeki tab sınıflarını temizle ve yenisini ekle
+            if (dashboard) {
+                dashboard.className = 'luffy-dashboard';
+                dashboard.classList.add(`tab-${tab}`);
+            }
         });
     });
 }

@@ -1046,3 +1046,117 @@ body {
     color: #fff;
     box-shadow: 0 0 5px var(--danger-red);
 }
+
+/* ================= TABS SYSTEM ================= */
+/* Repolar Sekmesi */
+.tab-repos .luffy-sidebar-left {
+    display: block !important;
+}
+.tab-repos .luffy-sidebar-left #statsSection {
+    display: none !important;
+}
+.tab-repos .luffy-center-col,
+.tab-repos .luffy-sidebar-right {
+    display: none !important;
+}
+.tab-repos .luffy-main {
+    grid-template-columns: 1fr;
+}
+
+/* İstatistikler Sekmesi */
+.tab-stats .luffy-sidebar-left,
+.tab-stats .luffy-sidebar-right {
+    display: none !important;
+}
+.tab-stats .luffy-main {
+    grid-template-columns: 1fr;
+}
+.tab-stats .luffy-center-col #longTermStatsSection {
+    display: grid !important;
+}
+.tab-stats .luffy-center-col #calendarSection {
+    display: block !important;
+}
+.tab-stats .luffy-center-col #avgStatsSection {
+    display: block !important;
+}
+
+/* Aktivite Sekmesi */
+.tab-activity .luffy-sidebar-left,
+.tab-activity .luffy-center-col {
+    display: none !important;
+}
+.tab-activity .luffy-sidebar-right {
+    display: block !important;
+}
+.tab-activity .luffy-main {
+    grid-template-columns: 1fr;
+}
+.tab-activity .luffy-sidebar-right .log-panel {
+    max-height: none;
+}
+.tab-activity .luffy-sidebar-right .log-timeline {
+    max-height: 800px;
+}
+
+/* Ayarlar Sekmesi */
+.tab-settings .luffy-sidebar-left,
+.tab-settings .luffy-sidebar-right {
+    display: none !important;
+}
+.tab-settings .luffy-main {
+    grid-template-columns: 1fr;
+}
+.tab-settings .luffy-center-col #settingsSection {
+    display: block !important;
+}
+.tab-settings .luffy-center-col #longTermStatsSection,
+.tab-settings .luffy-center-col #calendarSection,
+.tab-settings .luffy-center-col #avgStatsSection {
+    display: none !important;
+}
+
+/* Ortalamalar Paneli Tasarımı */
+.avg-stats-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 15px;
+}
+
+.avg-card {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.avg-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dotted rgba(74, 21, 21, 0.3);
+    padding: 8px 0;
+    font-size: 0.95rem;
+    font-weight: bold;
+}
+
+.avg-stat-row:last-of-type {
+    border-bottom: none;
+}
+
+.avg-label {
+    color: var(--parchment-text);
+}
+
+.avg-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: #a00;
+}
+
+@media (max-width: 768px) {
+    .avg-stats-container {
+        grid-template-columns: 1fr;
+    }
+}

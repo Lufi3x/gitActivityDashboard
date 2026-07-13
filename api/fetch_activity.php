@@ -65,7 +65,13 @@ if ($httpcode === 200) {
         "weekly_commits" => 0,
         "monthly_commits" => 0,
         "yearly_commits" => 0,
-        "calendar" => []
+        "calendar" => [],
+        "avg_daily_work_time_str" => "0 Dakika",
+        "avg_weekly_work_time_str" => "0 Dakika",
+        "avg_monthly_work_time_str" => "0 Dakika",
+        "avg_daily_commits" => 0,
+        "avg_weekly_commits" => 0,
+        "avg_monthly_commits" => 0
     ];
 
     foreach ($events as $event) {
@@ -185,6 +191,63 @@ if ($httpcode === 200) {
         if ($isToday) $periods['today']['timestamps'][] = $eventTimestamp;
         if ($isYesterday) $periods['yesterday']['timestamps'][] = $eventTimestamp;
         if ($isLast24h) $periods['last_24h']['timestamps'][] = $eventTimestamp;
+    }
+
+    // Bütün events listesini tarihlere göre gruplayıp günlük çalışma sürelerini hesaplayalım.
+    $dailyTimestamps = [];
+    foreach ($events as $event) {
+        $createdAt = $event['created_at'];
+        $eventTimestamp = strtotime($createdAt);
+        $eventDate = date('Y-m-d', $eventTimestamp);
+        $dailyTimestamps[$eventDate][] = $eventTimestamp;
+    }
+
+    $dailyWorkDurations = [];
+    $maxGap = 3 * 3600; 
+    $minSessionMinutes = 45;
+    $postSessionBuffer = 30;
+
+    foreach ($dailyTimestamps as $date => $times) {
+        sort($times);
+        $totalMinutes = 0;
+        $sessionStart = null;
+        $lastTime = null;
+        
+        foreach ($times as $time) {
+            if ($lastTime === null) {
+                $sessionStart = $time;
+                $lastTime = $time;
+            } elseif (($time - $lastTime) <= $maxGap) {
+                $lastTime = $time;
+            } else {
+                $sessionDurationMinutes = ($lastTime - $sessionStart) / 60;
+                if ($sessionDurationMinutes < $minSessionMinutes) {
+                    $sessionDurationMinutes = $minSessionMinutes;
+                } else {
+                    $sessionDurationMinutes += $postSessionBuffer;
+                }
+                $totalMinutes += $sessionDurationMinutes;
+                
+                $sessionStart = $time;
+                $lastTime = $time;
+            }
+        }
+        if ($sessionStart !== null) {
+            $sessionDurationMinutes = ($lastTime - $sessionStart) / 60;
+            if ($sessionDurationMinutes < $minSessionMinutes) {
+                $sessionDurationMinutes = $minSessionMinutes;
+            } else {
+                $sessionDurationMinutes += $postSessionBuffer;
+            }
+            $totalMinutes += $sessionDurationMinutes;
+        }
+        $dailyWorkDurations[$date] = round($totalMinutes);
+    }
+
+    $totalActiveDays = count($dailyWorkDurations);
+    $avgDailyWorkMinutes = 0;
+    if ($totalActiveDays > 0) {
+        $avgDailyWorkMinutes = round(array_sum($dailyWorkDurations) / $totalActiveDays);
     }
     
     foreach (['today', 'yesterday', 'last_24h'] as $pKey) {
@@ -319,15 +382,50 @@ if ($httpcode === 200) {
 
             // Son 7 ve 30 günün hesaplanması (tersten)
             $totalDays = count($allDays);
+            $activeDaysLast7 = 0;
+            $activeDaysLast30 = 0;
             for ($i = 1; $i <= 30; $i++) {
                 if ($totalDays - $i >= 0) {
                     $dayCount = $allDays[$totalDays - $i]['contributionCount'];
                     $stats['monthly_commits'] += $dayCount;
+                    if ($dayCount > 0) {
+                        $activeDaysLast30++;
+                    }
                     if ($i <= 7) {
                         $stats['weekly_commits'] += $dayCount;
+                        if ($dayCount > 0) {
+                            $activeDaysLast7++;
+                        }
                     }
                 }
             }
+
+            // Ortalama çalışma sürelerini ve commit'leri hesaplayalım
+            $avgDailyMinutes = isset($avgDailyWorkMinutes) ? $avgDailyWorkMinutes : 0;
+            
+            $estWeeklyDays = ($activeDaysLast7 > 0) ? $activeDaysLast7 : (($totalActiveDays > 0) ? min(5, $totalActiveDays) : 0);
+            $estMonthlyDays = ($activeDaysLast30 > 0) ? $activeDaysLast30 : (($totalActiveDays > 0) ? min(22, $totalActiveDays * 4) : 0);
+            
+            $avgWeeklyMinutes = $estWeeklyDays * $avgDailyMinutes;
+            $avgMonthlyMinutes = $estMonthlyDays * $avgDailyMinutes;
+            
+            $formatTime = function($totalMins) {
+                if ($totalMins <= 0) return "0 Dakika";
+                if ($totalMins >= 60) {
+                    $hours = floor($totalMins / 60);
+                    $mins = $totalMins % 60;
+                    return "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
+                }
+                return "{$totalMins} Dakika";
+            };
+            
+            $stats['avg_daily_work_time_str'] = $formatTime($avgDailyMinutes);
+            $stats['avg_weekly_work_time_str'] = $formatTime($avgWeeklyMinutes);
+            $stats['avg_monthly_work_time_str'] = $formatTime($avgMonthlyMinutes);
+            
+            $stats['avg_daily_commits'] = round($stats['monthly_commits'] / 30, 1);
+            $stats['avg_weekly_commits'] = round(($calendar['totalContributions'] ?? 0) / 52, 1);
+            $stats['avg_monthly_commits'] = round(($calendar['totalContributions'] ?? 0) / 12, 1);
         }
     }
     
