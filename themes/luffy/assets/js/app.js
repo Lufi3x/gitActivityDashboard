@@ -53,9 +53,15 @@ async function fetchActivity() {
                 if (result.stats.avg_daily_work_time_str !== undefined) {
                     document.getElementById('avgStatsSection').style.display = 'block';
                     
-                    // Ortalamalar (Sadece Günlük - Son 30 Gün)
-                    document.getElementById('avgDailyWorkTime').textContent = result.stats.avg_daily_work_time_str;
-                    document.getElementById('avgDailyCommits').textContent = result.stats.avg_daily_commits;
+                    // Ortalamalar (Son 7 Gün & Son 30 Gün)
+                    if (document.getElementById('avgDailyWorkTime7d')) {
+                        document.getElementById('avgDailyWorkTime7d').textContent = result.stats.avg_daily_work_time_str_7d || "0dk";
+                        document.getElementById('avgDailyWorkTime30d').textContent = result.stats.avg_daily_work_time_str_30d || "0dk";
+                    }
+                    if (document.getElementById('avgDailyCommits7d')) {
+                        document.getElementById('avgDailyCommits7d').textContent = result.stats.avg_daily_commits_7d || 0;
+                        document.getElementById('avgDailyCommits30d').textContent = result.stats.avg_daily_commits_30d || 0;
+                    }
 
                     // Gerçek Toplam Süreler
                     if (document.getElementById('realTodayWorkTime')) {

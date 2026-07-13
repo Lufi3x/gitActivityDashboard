@@ -193,10 +193,15 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                         <div class="parchment-card avg-card">
                             <div class="card-inner">
                                 <h4 class="card-title"><i class="fa-solid fa-hourglass-half"></i> GÜNLÜK ORT. ÇALIŞMA</h4>
-                                <div class="avg-stat-row single-row">
-                                    <span class="avg-val big-val" id="avgDailyWorkTime">0dk</span>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">SON 7 GÜN:</span>
+                                    <span class="avg-val" id="avgDailyWorkTime7d">0dk</span>
                                 </div>
-                                <div class="card-desc">- SON 30 GÜN ORTALAMASI -</div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">SON 30 GÜN:</span>
+                                    <span class="avg-val" id="avgDailyWorkTime30d">0dk</span>
+                                </div>
+                                <div class="card-desc">- GÜNLÜK ORTALAMA SÜRELER -</div>
                             </div>
                         </div>
 
@@ -224,10 +229,15 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                         <div class="parchment-card avg-card">
                             <div class="card-inner">
                                 <h4 class="card-title"><i class="fa-solid fa-calculator"></i> GÜNLÜK ORT. KATKI</h4>
-                                <div class="avg-stat-row single-row">
-                                    <span class="avg-val big-val" id="avgDailyCommits">0</span>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">SON 7 GÜN:</span>
+                                    <span class="avg-val" id="avgDailyCommits7d">0</span>
                                 </div>
-                                <div class="card-desc">- SON 30 GÜN ORTALAMASI -</div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">SON 30 GÜN:</span>
+                                    <span class="avg-val" id="avgDailyCommits30d">0</span>
+                                </div>
+                                <div class="card-desc">- GÜNLÜK ORTALAMA KATKILAR -</div>
                             </div>
                         </div>
 

@@ -455,16 +455,25 @@ if ($httpcode === 200) {
                 return "{$totalMins} Dakika";
             };
             // ========================================================
-            // ORTALAMA KATKI (COMMIT) - Son 30 güne göre günlük
+            // ORTALAMA KATKI (COMMIT) - Son 7 ve 30 Güne Göre
             // ========================================================
-            $stats['avg_daily_commits'] = round($stats['monthly_commits'] / 30, 1);
+            $stats['avg_daily_commits_7d'] = round($stats['weekly_commits'] / 7, 1);
+            $stats['avg_daily_commits_30d'] = round($stats['monthly_commits'] / 30, 1);
+            // Geriye dönük uyumluluk için eski key'i de 30 günlük olarak tutalım
+            $stats['avg_daily_commits'] = $stats['avg_daily_commits_30d'];
 
             // ========================================================
-            // ORTALAMA ÇALIŞMA SÜRESİ - Son 30 güne göre günlük
+            // ORTALAMA ÇALIŞMA SÜRESİ - Son 7 ve 30 Güne Göre
             // ========================================================
-            $avgDailyCommits = $stats['monthly_commits'] / 30;
-            $avgDailyMinutes = round($avgDailyCommits * $minutesPerContrib);
-            $stats['avg_daily_work_time_str'] = $formatTime($avgDailyMinutes);
+            $avgDailyCommits7d = $stats['weekly_commits'] / 7;
+            $avgDailyMinutes7d = round($avgDailyCommits7d * $minutesPerContrib);
+            $stats['avg_daily_work_time_str_7d'] = $formatTime($avgDailyMinutes7d);
+
+            $avgDailyCommits30d = $stats['monthly_commits'] / 30;
+            $avgDailyMinutes30d = round($avgDailyCommits30d * $minutesPerContrib);
+            $stats['avg_daily_work_time_str_30d'] = $formatTime($avgDailyMinutes30d);
+            // Geriye dönük uyumluluk için eski key'i de 30 günlük olarak tutalım
+            $stats['avg_daily_work_time_str'] = $stats['avg_daily_work_time_str_30d'];
 
             // ========================================================
             // TOPLAM ÇALIŞMA SÜRESİ (Gerçekleşen)
