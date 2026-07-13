@@ -392,31 +392,60 @@ if ($httpcode === 200) {
 
             // Son 7 ve 30 günün hesaplanması (tersten)
             $totalDays = count($allDays);
-            $activeDaysLast7 = 0;
-            $activeDaysLast30 = 0;
+            $todayDate = date('Y-m-d');
+            $todayContribs = 0;
+            
             for ($i = 1; $i <= 30; $i++) {
                 if ($totalDays - $i >= 0) {
                     $dayCount = $allDays[$totalDays - $i]['contributionCount'];
+                    $dayDate = $allDays[$totalDays - $i]['date'];
                     $stats['monthly_commits'] += $dayCount;
-                    if ($dayCount > 0) {
-                        $activeDaysLast30++;
-                    }
                     if ($i <= 7) {
                         $stats['weekly_commits'] += $dayCount;
-                        if ($dayCount > 0) {
-                            $activeDaysLast7++;
+                    }
+                    if ($dayDate === $todayDate) {
+                        $todayContribs = $dayCount;
+                    }
+                }
+            }
+            // Bugünün katkısı son 30 günde yoksa takvimin son gününe bak
+            if ($todayContribs === 0 && $totalDays > 0) {
+                $lastDay = $allDays[$totalDays - 1];
+                if ($lastDay['date'] === $todayDate) {
+                    $todayContribs = $lastDay['contributionCount'];
+                }
+            }
+
+            // ========================================================
+            // KATKIYA DAYALI SÜRE TAHMİN ORANI (minutesPerContribution)
+            // ========================================================
+            // Events API'den gelen çalışma sürelerini, aynı günlerdeki
+            // GraphQL katkı sayılarına bölerek "1 katkı = kaç dakika"
+            // oranını buluyoruz. Böylece tüm hesaplamalar tutarlı olur.
+            $totalEventsWorkMinutes = isset($dailyWorkDurations) ? array_sum($dailyWorkDurations) : 0;
+            $totalContribsInEventDays = 0;
+            if (isset($dailyWorkDurations) && is_array($dailyWorkDurations)) {
+                foreach ($dailyWorkDurations as $evDate => $evMins) {
+                    foreach ($allDays as $calDay) {
+                        if ($calDay['date'] === $evDate) {
+                            $totalContribsInEventDays += $calDay['contributionCount'];
+                            break;
                         }
                     }
                 }
             }
+            // Katkı başına dakika (fallback: 8 dakika)
+            $minutesPerContrib = ($totalContribsInEventDays > 0) 
+                ? ($totalEventsWorkMinutes / $totalContribsInEventDays) 
+                : 8;
+            // Minimum 3, maksimum 20 dakika arasında sınırla (aşırı sapmaları önle)
+            $minutesPerContrib = max(3, min(20, $minutesPerContrib));
 
-            // Ortalama çalışma sürelerini ve commit'leri hesaplayalım
-            $avgDailyMinutes = isset($avgDailyWorkMinutes) ? $avgDailyWorkMinutes : 0;
-            
-            $avgWeeklyMinutes = $avgDailyMinutes * 7;
-            $avgMonthlyMinutes = $avgDailyMinutes * 30;
-            
+            // ========================================================
+            // FORMATLAMA FONKSİYONU
+            // ========================================================
             $formatTime = function($totalMins) {
+                $totalMins = round($totalMins);
                 if ($totalMins <= 0) return "0 Dakika";
                 if ($totalMins >= 60) {
                     $hours = floor($totalMins / 60);
@@ -425,35 +454,30 @@ if ($httpcode === 200) {
                 }
                 return "{$totalMins} Dakika";
             };
-            
+
+            // ========================================================
+            // ORTALAMA KATKI (COMMIT) - Yıllık toplama göre
+            // ========================================================
+            $yearlyTotal = $calendar['totalContributions'] ?? 0;
+            $stats['avg_daily_commits'] = round($yearlyTotal / 365, 1);
+            $stats['avg_weekly_commits'] = round($yearlyTotal / 52, 1);
+            $stats['avg_monthly_commits'] = round($yearlyTotal / 12, 1);
+
+            // ========================================================
+            // ORTALAMA ÇALIŞMA SÜRESİ - Yıllık ortalama x oran
+            // ========================================================
+            $avgDailyCommits = $yearlyTotal / 365;
+            $avgDailyMinutes = round($avgDailyCommits * $minutesPerContrib);
             $stats['avg_daily_work_time_str'] = $formatTime($avgDailyMinutes);
-            $stats['avg_weekly_work_time_str'] = $formatTime($avgWeeklyMinutes);
-            $stats['avg_monthly_work_time_str'] = $formatTime($avgMonthlyMinutes);
-            
-            // Commit ortalamaları (Tam 1:7:30 oranları ile, son 30 gün bazında)
-            $monthlyCommitsTotal = $stats['monthly_commits'] ?? 0;
-            $stats['avg_daily_commits'] = round($monthlyCommitsTotal / 30, 1);
-            $stats['avg_weekly_commits'] = round(($monthlyCommitsTotal / 30) * 7, 1);
-            $stats['avg_monthly_commits'] = round($monthlyCommitsTotal, 1);
+            $stats['avg_weekly_work_time_str'] = $formatTime($avgDailyMinutes * 7);
+            $stats['avg_monthly_work_time_str'] = $formatTime($avgDailyMinutes * 30);
 
-            // Gerçek Toplam Sürelerin hesaplanması
-            $todayDate = date('Y-m-d');
-            $realTodayMins = isset($dailyWorkDurations[$todayDate]) ? $dailyWorkDurations[$todayDate] : 0;
-            
-            $realWeeklyWorkMinutes = 0;
-            $sevenDaysAgoStr = date('Y-m-d', strtotime('-7 days'));
-            if (isset($dailyWorkDurations) && is_array($dailyWorkDurations)) {
-                foreach ($dailyWorkDurations as $date => $mins) {
-                    if ($date >= $sevenDaysAgoStr) {
-                        $realWeeklyWorkMinutes += $mins;
-                    }
-                }
-            }
-            $realMonthlyWorkMinutes = isset($dailyWorkDurations) ? array_sum($dailyWorkDurations) : 0;
-
-            $stats['real_today_work_time_str'] = $formatTime($realTodayMins);
-            $stats['real_weekly_work_time_str'] = $formatTime($realWeeklyWorkMinutes);
-            $stats['real_monthly_work_time_str'] = $formatTime($realMonthlyWorkMinutes);
+            // ========================================================
+            // TOPLAM ÇALIŞMA SÜRESİ (Gerçekleşen) - GraphQL x oran
+            // ========================================================
+            $stats['real_today_work_time_str'] = $formatTime($todayContribs * $minutesPerContrib);
+            $stats['real_weekly_work_time_str'] = $formatTime($stats['weekly_commits'] * $minutesPerContrib);
+            $stats['real_monthly_work_time_str'] = $formatTime($stats['monthly_commits'] * $minutesPerContrib);
         }
     }
     
