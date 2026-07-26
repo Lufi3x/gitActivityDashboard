@@ -230,6 +230,86 @@ function updateStatsUI(period) {
             projectsList.innerHTML = '<li style="color: var(--text-muted); font-size:0.9rem;">Aktif modül yok</li>';
         }
     }
+
+    // 24 Saatlik Gün İçi Isı Haritasını Güncelle
+    renderHourlyHeatmap(period);
+}
+
+function renderHourlyHeatmap(period) {
+    const container = document.getElementById('hourlyBarsGraph');
+    const section = document.getElementById('hourlyHeatmapSection');
+    const subtitle = document.getElementById('heatmapSubtitle');
+    if (!container || !section) return;
+
+    const pStats = (statsData && statsData[period]) ? statsData[period] : (statsData || {});
+    const hourlyData = pStats.hourly_activity || (statsData ? statsData.hourly_activity : null) || Array(24).fill(0);
+
+    const periodNames = {
+        'today': 'BUGÜN (00:00 - 23:59)',
+        'yesterday': 'DÜN (00:00 - 23:59)',
+        'last_24h': 'SON 24 SAAT'
+    };
+
+    if (subtitle) {
+        subtitle.textContent = `${periodNames[period] || 'SAATLİK'} DAĞILIM`;
+    }
+
+    section.style.display = 'block';
+    container.innerHTML = '';
+
+    const maxCount = Math.max(...hourlyData, 1);
+
+    hourlyData.forEach((count, hour) => {
+        const col = document.createElement('div');
+        col.className = 'hourly-bar-col';
+
+        const track = document.createElement('div');
+        track.className = 'hourly-bar-track';
+
+        const fill = document.createElement('div');
+        fill.className = 'hourly-bar-fill';
+
+        let level = 0;
+        let heightPercent = 0;
+
+        if (count > 0) {
+            heightPercent = Math.max(15, Math.round((count / maxCount) * 100));
+            if (count <= 2) level = 1;
+            else if (count <= 5) level = 2;
+            else if (count <= 10) level = 3;
+            else level = 4;
+        } else {
+            heightPercent = 0;
+            level = 0;
+        }
+
+        fill.style.height = `${heightPercent}%`;
+        fill.setAttribute('data-level', level);
+
+        track.appendChild(fill);
+        col.appendChild(track);
+
+        const hourStr = String(hour).padStart(2, '0') + ':00';
+        const nextHourStr = String((hour + 1) % 24).padStart(2, '0') + ':00';
+
+        col.addEventListener('mouseenter', (e) => {
+            const globalTooltip = document.getElementById('globalTooltip');
+            if (!globalTooltip) return;
+            globalTooltip.innerHTML = `<strong>${hourStr} - ${nextHourStr}</strong><br>${count} İşlem / Aktivite`;
+            const rect = col.getBoundingClientRect();
+            globalTooltip.style.display = 'block';
+            globalTooltip.style.left = rect.left + (rect.width / 2) + window.scrollX + 'px';
+            globalTooltip.style.top = rect.top + window.scrollY - globalTooltip.offsetHeight - 8 + 'px';
+            globalTooltip.classList.add('show');
+        });
+
+        col.addEventListener('mouseleave', () => {
+            const globalTooltip = document.getElementById('globalTooltip');
+            if (globalTooltip) globalTooltip.classList.remove('show');
+        });
+
+        container.appendChild(col);
+    });
 }
 
 function initPeriodSelector() {

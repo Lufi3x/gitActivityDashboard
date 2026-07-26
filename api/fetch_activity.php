@@ -41,13 +41,13 @@ if ($httpcode === 200) {
 
     $periods = [
         'today' => [
-            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => []
+            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => [], "hourly_activity" => array_fill(0, 24, 0)
         ],
         'yesterday' => [
-            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => []
+            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => [], "hourly_activity" => array_fill(0, 24, 0)
         ],
         'last_24h' => [
-            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => []
+            "commits" => 0, "additions" => 0, "deletions" => 0, "changed_files" => 0, "repos" => 0, "work_time" => "0 Dakika", "active_projects" => [], "unique_repos" => [], "timestamps" => [], "hourly_activity" => array_fill(0, 24, 0)
         ]
     ];
     
@@ -124,6 +124,18 @@ if ($httpcode === 200) {
                             foreach ($compareData['files'] as $file) {
                                 $pushAdditions += $file['additions'] ?? 0;
                                 $pushDeletions += $file['deletions'] ?? 0;
+                            }
+                        }
+                        if (isset($compareData['commits']) && is_array($compareData['commits'])) {
+                            foreach ($compareData['commits'] as $cItem) {
+                                $cDateStr = $cItem['commit']['author']['date'] ?? ($cItem['commit']['committer']['date'] ?? null);
+                                if ($cDateStr) {
+                                    $cTimestamp = strtotime($cDateStr);
+                                    $cDate = date('Y-m-d', $cTimestamp);
+                                    if ($cDate === $today) $periods['today']['timestamps'][] = $cTimestamp;
+                                    if ($cDate === $yesterday) $periods['yesterday']['timestamps'][] = $cTimestamp;
+                                    if ($cTimestamp >= $twentyFourHoursAgo) $periods['last_24h']['timestamps'][] = $cTimestamp;
+                                }
                             }
                         }
                     }
@@ -270,6 +282,15 @@ if ($httpcode === 200) {
         
         if (count($periods[$pKey]['timestamps']) > 0) {
             sort($periods[$pKey]['timestamps']);
+
+            // Saatlik aktivite yoğunluğunu hesapla (24 Saat: 0..23)
+            $hourlyCounts = array_fill(0, 24, 0);
+            foreach ($periods[$pKey]['timestamps'] as $time) {
+                $hourInt = (int)date('H', $time);
+                $hourlyCounts[$hourInt]++;
+            }
+            $periods[$pKey]['hourly_activity'] = $hourlyCounts;
+
             $totalMinutes = 0;
             $sessionStart = null;
             $lastTime = null;
@@ -328,6 +349,7 @@ if ($httpcode === 200) {
     $stats['repos'] = $periods['today']['repos'];
     $stats['work_time'] = $periods['today']['work_time'];
     $stats['active_projects'] = $periods['today']['active_projects'];
+    $stats['hourly_activity'] = $periods['today']['hourly_activity'];
 
     $stats['today'] = [
         "commits" => $periods['today']['commits'],
@@ -336,7 +358,8 @@ if ($httpcode === 200) {
         "changed_files" => $periods['today']['changed_files'],
         "repos" => $periods['today']['repos'],
         "work_time" => $periods['today']['work_time'],
-        "active_projects" => $periods['today']['active_projects']
+        "active_projects" => $periods['today']['active_projects'],
+        "hourly_activity" => $periods['today']['hourly_activity']
     ];
     $stats['yesterday'] = [
         "commits" => $periods['yesterday']['commits'],
@@ -345,7 +368,8 @@ if ($httpcode === 200) {
         "changed_files" => $periods['yesterday']['changed_files'],
         "repos" => $periods['yesterday']['repos'],
         "work_time" => $periods['yesterday']['work_time'],
-        "active_projects" => $periods['yesterday']['active_projects']
+        "active_projects" => $periods['yesterday']['active_projects'],
+        "hourly_activity" => $periods['yesterday']['hourly_activity']
     ];
     $stats['last_24h'] = [
         "commits" => $periods['last_24h']['commits'],
@@ -354,7 +378,8 @@ if ($httpcode === 200) {
         "changed_files" => $periods['last_24h']['changed_files'],
         "repos" => $periods['last_24h']['repos'],
         "work_time" => $periods['last_24h']['work_time'],
-        "active_projects" => $periods['last_24h']['active_projects']
+        "active_projects" => $periods['last_24h']['active_projects'],
+        "hourly_activity" => $periods['last_24h']['hourly_activity']
     ];
     
     // --- GRAPHQL BÖLÜMÜ (KATKI TAKVİMİ) ---

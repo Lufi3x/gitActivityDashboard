@@ -15,7 +15,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
         rel="stylesheet">
     <!-- FontAwesome Eklendi -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="themes/luffy/assets/css/style.css?v=2">
+    <link rel="stylesheet" href="themes/luffy/assets/css/style.css?v=<?php echo filemtime(__DIR__ . '/assets/css/style.css'); ?>">
 </head>
 
 <body class="<?= htmlspecialchars($defaultTheme) ?>">
@@ -185,6 +185,33 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                     </div>
                 </section>
 
+                <!-- Gün İçi Isı Haritası (24 Saat) Paneli -->
+                <section class="luffy-panel hourly-heatmap-panel mt-20" id="hourlyHeatmapSection" style="display: none;">
+                    <h3 class="panel-header" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <span><i class="fa-solid fa-fire-flame-curved"></i> GÜN İÇİ ISI HARİTASI (24 SAAT)</span>
+                        <span class="heatmap-subtitle" id="heatmapSubtitle" style="font-size: 0.75rem; color: var(--gold-yellow); letter-spacing: 1px;">00:00 - 23:59 SAATLİK DAĞILIM</span>
+                    </h3>
+                    <div class="hourly-heatmap-container">
+                        <div class="hourly-bars-wrapper" id="hourlyBarsGraph">
+                            <!-- JS ile 24 saatlik sütunlar yüklenecek -->
+                        </div>
+                        <div class="hourly-hours-labels">
+                            <span>00</span><span>02</span><span>04</span><span>06</span><span>08</span><span>10</span><span>12</span><span>14</span><span>16</span><span>18</span><span>20</span><span>22</span>
+                        </div>
+                    </div>
+                    <div class="calendar-legend" style="margin-top: 10px;">
+                        <span>AZ</span>
+                        <ul class="legend-list">
+                            <li style="background-color: var(--cal-level-0);"></li>
+                            <li style="background-color: var(--cal-level-1);"></li>
+                            <li style="background-color: var(--cal-level-2);"></li>
+                            <li style="background-color: var(--cal-level-3);"></li>
+                            <li style="background-color: var(--cal-level-4);"></li>
+                        </ul>
+                        <span>ÇOK</span>
+                    </div>
+                </section>
+
                 <!-- İstatistikler Paneli -->
                 <section class="luffy-panel avg-stats-panel" id="avgStatsSection" style="display: none;">
                     <h3 class="panel-header"><i class="fa-solid fa-chart-pie"></i> DETAYLI İSTATİSTİKLER</h3>
@@ -313,7 +340,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
     </div>
 
     <div id="globalTooltip" class="global-tooltip"></div>
-    <script src="themes/luffy/assets/js/app.js"></script>
+    <script src="themes/luffy/assets/js/app.js?v=<?php echo filemtime(__DIR__ . '/assets/js/app.js'); ?>"></script>
 </body>
 
 </html>
