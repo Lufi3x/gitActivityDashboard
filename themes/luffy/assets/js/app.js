@@ -76,6 +76,11 @@ async function fetchActivity() {
                         document.getElementById('realWeeklyCommits').textContent = result.stats.weekly_commits || 0;
                         document.getElementById('realMonthlyCommits').textContent = result.stats.monthly_commits || 0;
                     }
+
+                    // Günlük Çalışma Günlüğü (Daily Log) Render
+                    if (result.stats.daily_log && result.stats.daily_log.length > 0) {
+                        renderDailyLog(result.stats.daily_log);
+                    }
                 }
 
                 // Katkı Takvimi
@@ -352,6 +357,113 @@ function initTabs() {
             }
         });
     });
+}
+
+let globalDailyLogData = [];
+
+function renderDailyLog(dailyLog) {
+    globalDailyLogData = dailyLog;
+    const container = document.getElementById('dailyLogList');
+    if (!container) return;
+
+    // Özet Hesaplamaları
+    let totalActiveDays = 0;
+    let totalWorkMinutes = 0;
+    let maxWorkDay = null;
+    let maxWorkMinutes = 0;
+
+    dailyLog.forEach(day => {
+        if (day.contributions > 0 || day.work_minutes > 0) {
+            totalActiveDays++;
+        }
+        totalWorkMinutes += day.work_minutes;
+
+        if (day.work_minutes > maxWorkMinutes) {
+            maxWorkMinutes = day.work_minutes;
+            maxWorkDay = day;
+        }
+    });
+
+    // Özet DOM Elemanlarını Doldur
+    const activeDaysElem = document.getElementById('dailyLogTotalActiveDays');
+    if (activeDaysElem) activeDaysElem.textContent = `${totalActiveDays} Gün`;
+
+    const totalTimeElem = document.getElementById('dailyLogTotalWorkTime');
+    if (totalTimeElem) {
+        const hours = Math.floor(totalWorkMinutes / 60);
+        const mins = totalWorkMinutes % 60;
+        totalTimeElem.textContent = hours > 0 ? `${hours} Saat ${mins}dk` : `${mins}dk`;
+    }
+
+    const maxDayElem = document.getElementById('dailyLogMaxWorkDay');
+    if (maxDayElem) {
+        if (maxWorkDay) {
+            maxDayElem.textContent = `${maxWorkDay.formatted_date.split(',')[0]} (${maxWorkDay.work_time_str})`;
+        } else {
+            maxDayElem.textContent = '-';
+        }
+    }
+
+    // Liste Render Etme
+    displayDailyLogItems(dailyLog, maxWorkMinutes);
+
+    // Arama Event Listener
+    const searchInput = document.getElementById('dailyLogSearchInput');
+    if (searchInput && !searchInput.dataset.initialized) {
+        searchInput.dataset.initialized = 'true';
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const filtered = globalDailyLogData.filter(day => 
+                day.formatted_date.toLowerCase().includes(query) || 
+                day.date.includes(query) ||
+                day.work_time_str.toLowerCase().includes(query)
+            );
+            displayDailyLogItems(filtered, maxWorkMinutes);
+        });
+    }
+}
+
+function displayDailyLogItems(items, maxWorkMinutes) {
+    const container = document.getElementById('dailyLogList');
+    if (!container) return;
+
+    if (!items || items.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+                <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; color: var(--danger-red);"></i>
+                <p>Aradığınız kriterlere uygun günlük çalışma kaydı bulunamadı.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const maxCap = maxWorkMinutes > 0 ? maxWorkMinutes : 300;
+
+    let html = '';
+    items.forEach(day => {
+        const progressPercent = Math.min(100, Math.round((day.work_minutes / maxCap) * 100));
+        const isTodayClass = day.is_today ? 'is-today' : '';
+        
+        html += `
+            <div class="daily-item-card ${isTodayClass}">
+                <div class="daily-info-left">
+                    <div class="daily-date">${day.formatted_date}</div>
+                    <div class="daily-sub">
+                        <span class="daily-badge"><i class="fa-solid fa-code-commit"></i> ${day.contributions} Katkı</span>
+                        ${day.work_minutes > 0 ? `<span style="opacity: 0.8;"><i class="fa-solid fa-stopwatch"></i> ${day.work_minutes} Dk</span>` : '<span style="opacity: 0.5;">İşlem Yok</span>'}
+                    </div>
+                </div>
+                <div class="daily-info-right">
+                    <div class="daily-time-str">${day.work_time_str}</div>
+                    <div class="daily-progress-bg">
+                        <div class="daily-progress-bar" style="width: ${progressPercent}%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
 }
 
 

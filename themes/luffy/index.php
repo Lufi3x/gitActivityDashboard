@@ -290,6 +290,41 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                     </div>
                 </section>
 
+                <!-- Günlük Çalışma Günlüğü Paneli -->
+                <section class="luffy-panel daily-log-panel" id="dailyLogSection" style="display: none;">
+                    <h3 class="panel-header"><i class="fa-solid fa-calendar-days"></i> GÜNLÜK ÇALIŞMA GEÇMİŞİ</h3>
+                    
+                    <!-- Özet Kartları -->
+                    <div class="daily-log-summary">
+                        <div class="summary-box">
+                            <span class="box-title">TOPLAM AKTİF GÜN</span>
+                            <span class="box-val" id="dailyLogTotalActiveDays">0 Gün</span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="box-title">TOPLAM SÜRE (365 GÜN)</span>
+                            <span class="box-val" id="dailyLogTotalWorkTime">0 Saat</span>
+                        </div>
+                        <div class="summary-box">
+                            <span class="box-title">EN REKOR GÜN</span>
+                            <span class="box-val" id="dailyLogMaxWorkDay">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Gün Liste Filtresi & Arama -->
+                    <div class="daily-log-controls">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="dailyLogSearchInput" placeholder="Tarih veya gün ara (ör: Ağustos, Pazartesi, 2026)..." class="luffy-input">
+                    </div>
+
+                    <!-- Gün Listesi Container -->
+                    <div class="daily-log-list" id="dailyLogList">
+                        <div class="loading-state">
+                            <div class="spinner"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                            <p>ÇALIŞMA GÜNLÜĞÜ YÜKLENİYOR...</p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Ayarlar Paneli -->
                 <section class="luffy-panel settings-panel" id="settingsSection" style="display: none;">
                     <h3 class="panel-header"><i class="fa-solid fa-gear"></i> PANEL AYARLARI</h3>
@@ -328,6 +363,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <a href="#" class="nav-item active" data-tab="home"><i class="fa-solid fa-compass"></i> ANA SAYFA</a>
                 <a href="#" class="nav-item" data-tab="repos"><i class="fa-solid fa-book-journal-whills"></i> REPOLAR</a>
                 <a href="#" class="nav-item" data-tab="stats"><i class="fa-solid fa-chart-simple"></i> İSTATİSTİKLER</a>
+                <a href="#" class="nav-item" data-tab="daily"><i class="fa-solid fa-calendar-days"></i> GÜNLÜK LOG</a>
                 <a href="#" class="nav-item" data-tab="activity"><i class="fa-solid fa-anchor"></i> AKTİVİTE</a>
                 <a href="#" class="nav-item" data-tab="settings"><i class="fa-solid fa-gear"></i> AYARLAR</a>
             </nav>

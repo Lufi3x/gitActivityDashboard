@@ -1252,8 +1252,222 @@ body {
     padding: 15px 0;
 }
 
+/* Günlük Log Sekmesi */
+.tab-daily .luffy-sidebar-left,
+.tab-daily .luffy-sidebar-right {
+    display: none !important;
+}
+.tab-daily .luffy-main {
+    grid-template-columns: 1fr;
+}
+.tab-daily .luffy-center-col #dailyLogSection {
+    display: block !important;
+}
+.tab-daily .luffy-center-col #longTermStatsSection,
+.tab-daily .luffy-center-col #calendarSection,
+.tab-daily .luffy-center-col #avgStatsSection,
+.tab-daily .luffy-center-col #settingsSection {
+    display: none !important;
+}
+
+/* Günlük Çalışma Günlüğü Paneli Tasarımı */
+.daily-log-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.summary-box {
+    background: rgba(40, 10, 10, 0.8);
+    border: 1px solid var(--panel-border);
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.summary-box .box-title {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+}
+
+.summary-box .box-val {
+    display: block;
+    font-size: 1.3rem;
+    color: var(--gold-accent);
+    font-family: 'Permanent Marker', cursive;
+    margin-top: 4px;
+}
+
+.daily-log-controls {
+    padding: 15px;
+    position: relative;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.daily-log-controls .search-icon {
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--danger-red);
+}
+
+.daily-log-controls .luffy-input {
+    width: 100%;
+    padding: 10px 15px 10px 38px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.daily-log-controls .luffy-input:focus {
+    border-color: var(--danger-red);
+    outline: none;
+    box-shadow: 0 0 10px rgba(224, 0, 0, 0.4);
+}
+
+.daily-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+    max-height: 650px;
+    overflow-y: auto;
+}
+
+/* Custom Scrollbar for Daily Log */
+.daily-log-list::-webkit-scrollbar {
+    width: 6px;
+}
+.daily-log-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+.daily-log-list::-webkit-scrollbar-thumb {
+    background: var(--danger-red);
+    border-radius: 3px;
+}
+
+.daily-item-card {
+    background: url('../images/parchment_bg.png') repeat, #d2b48c;
+    background-size: cover;
+    border: 2px solid var(--parchment-border);
+    border-radius: 6px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.daily-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(224, 0, 0, 0.3);
+}
+
+.daily-item-card.is-today {
+    border: 2px solid var(--danger-red);
+    box-shadow: 0 0 15px rgba(224, 0, 0, 0.5);
+}
+
+.daily-item-card.is-today::before {
+    content: 'BUGÜN';
+    position: absolute;
+    top: -10px;
+    right: 15px;
+    background: var(--danger-red);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+}
+
+.daily-info-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.daily-date {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 1rem;
+    color: var(--parchment-text);
+}
+
+.daily-sub {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #5a2020;
+    font-weight: 600;
+}
+
+.daily-badge {
+    background: rgba(160, 0, 0, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(160, 0, 0, 0.3);
+}
+
+.daily-info-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.daily-time-str {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: #900;
+    letter-spacing: 0.5px;
+}
+
+.daily-progress-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.daily-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #d32f2f, #f57c00);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
 @media (max-width: 768px) {
-    .avg-stats-container {
+    .avg-stats-container,
+    .daily-log-summary {
         grid-template-columns: 1fr;
+    }
+    .daily-item-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .daily-info-right {
+        width: 100%;
+        align-items: flex-start;
     }
 }

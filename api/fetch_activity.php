@@ -74,7 +74,8 @@ if ($httpcode === 200) {
         "avg_monthly_commits" => 0,
         "real_today_work_time_str" => "0 Dakika",
         "real_weekly_work_time_str" => "0 Dakika",
-        "real_monthly_work_time_str" => "0 Dakika"
+        "real_monthly_work_time_str" => "0 Dakika",
+        "daily_log" => []
     ];
 
     foreach ($events as $event) {
@@ -512,6 +513,47 @@ if ($httpcode === 200) {
             // Hafta ve ay için GraphQL x oran (events bu kadar geriye gitmiyor)
             $stats['real_weekly_work_time_str'] = $formatTime($stats['weekly_commits'] * $minutesPerContrib);
             $stats['real_monthly_work_time_str'] = $formatTime($stats['monthly_commits'] * $minutesPerContrib);
+
+            // ========================================================
+            // GÜNLÜK ÇALIŞMA DÖKÜMÜ (daily_log)
+            // ========================================================
+            $dailyLog = [];
+            $turkishDays = [
+                'Monday' => 'Pazartesi', 'Tuesday' => 'Salı', 'Wednesday' => 'Çarşamba',
+                'Thursday' => 'Perşembe', 'Friday' => 'Cuma', 'Saturday' => 'Cumartesi', 'Sunday' => 'Pazar'
+            ];
+            $turkishMonths = [
+                '01' => 'Ocak', '02' => 'Şubat', '03' => 'Mart', '04' => 'Nisan',
+                '05' => 'Mayıs', '06' => 'Haziran', '07' => 'Temmuz', '08' => 'Ağustos',
+                '09' => 'Eylül', '10' => 'Ekim', '11' => 'Kasım', '12' => 'Aralık'
+            ];
+
+            $reversedDays = array_reverse($allDays);
+            foreach ($reversedDays as $dayItem) {
+                $dDate = $dayItem['date'];
+                $dContribs = $dayItem['contributionCount'];
+                
+                if (isset($dailyWorkDurations[$dDate])) {
+                    $dMinutes = $dailyWorkDurations[$dDate];
+                } else {
+                    $dMinutes = round($dContribs * $minutesPerContrib);
+                }
+                
+                $ts = strtotime($dDate);
+                $dayName = $turkishDays[date('l', $ts)] ?? date('l', $ts);
+                $monthName = $turkishMonths[date('m', $ts)] ?? date('m', $ts);
+                $formattedDate = date('j', $ts) . ' ' . $monthName . ' ' . date('Y', $ts) . ', ' . $dayName;
+
+                $dailyLog[] = [
+                    'date' => $dDate,
+                    'formatted_date' => $formattedDate,
+                    'contributions' => $dContribs,
+                    'work_minutes' => $dMinutes,
+                    'work_time_str' => $formatTime($dMinutes),
+                    'is_today' => ($dDate === $todayDate)
+                ];
+            }
+            $stats['daily_log'] = $dailyLog;
         }
     }
     
