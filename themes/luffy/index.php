@@ -356,7 +356,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <section class="luffy-panel token-calc-panel" id="tokensSection" style="display: none;">
                     <h3 class="panel-header" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span><i class="fa-solid fa-calculator"></i> TOKEN & PROJE ANALİZİ</span>
-                        <span style="font-size: 0.75rem; color: #ffd700; letter-spacing: 1px;">AI TOKEN METRİKLERİ & KARŞILAŞTIRMA</span>
+                        <span id="tokenCacheInfoBadge" style="font-size: 0.75rem; color: #ffd700; letter-spacing: 1px;">TÜM ZAMANLAR PROJE & TOKEN METRİKLERİ</span>
                     </h3>
                     <div style="padding: 20px;">
                         

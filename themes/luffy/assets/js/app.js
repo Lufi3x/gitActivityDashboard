@@ -87,9 +87,14 @@ async function fetchActivity() {
                         document.getElementById('lines24hWorkTime').textContent = result.stats.last_24h ? (result.stats.last_24h.work_time_lines || "0dk") : "0dk";
                     }
 
-                    // Proje Bazlı Token & Analiz Tablosu Render
-                    if (result.stats.project_stats && result.stats.project_stats.length > 0) {
-                        renderProjectAnalyticsTable(result.stats.project_stats);
+                    // Proje Bazlı Token & Analiz Tablosu Render (Tüm Zamanlar)
+                    const projectsToRender = result.stats.all_time_project_stats || result.stats.project_stats;
+                    if (projectsToRender && projectsToRender.length > 0) {
+                        renderProjectAnalyticsTable(projectsToRender);
+                    }
+                    if (result.stats.all_time_cache_info && document.getElementById('tokenCacheInfoBadge')) {
+                        const cInfo = result.stats.all_time_cache_info;
+                        document.getElementById('tokenCacheInfoBadge').textContent = `TÜM ZAMANLAR (${projectsToRender.length} PROJE • CACHE: ${cInfo.cached_at || 'Aktif'})`;
                     }
 
                     // Günlük Çalışma Günlüğü (Daily Log) Render

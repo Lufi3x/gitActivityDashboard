@@ -447,9 +447,138 @@ if ($httpcode === 200) {
         return $b['estimated_tokens'] <=> $a['estimated_tokens'];
     });
 
+    // --- TÜM ZAMANLAR PROJE VE TOKEN ANALİZİ (UZUN SÜRELİ CACHE) ---
+    $allTimeCacheFile = __DIR__ . '/all_time_projects_cache.json';
+    $allTimeCacheDuration = 7200; // 2 saat (7200 saniye) önbellek süresi
+    $allTimeProjectStats = [];
+
+    if (file_exists($allTimeCacheFile) && (time() - filemtime($allTimeCacheFile)) < $allTimeCacheDuration) {
+        $cachedAllTime = json_decode(file_get_contents($allTimeCacheFile), true);
+        if (is_array($cachedAllTime) && !empty($cachedAllTime['project_stats'])) {
+            $allTimeProjectStats = $cachedAllTime;
+        }
+    }
+
+    if (empty($allTimeProjectStats)) {
+        // GraphQL üzerinden kullanıcının tüm depolarının çekilmesi
+        $allReposQuery = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner isPrivate pushedAt defaultBranchRef { target { ... on Commit { history { totalCount } } } } } } } }"}';
+
+        $chAllRepos = curl_init();
+        curl_setopt($chAllRepos, CURLOPT_URL, "https://api.github.com/graphql");
+        curl_setopt($chAllRepos, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($chAllRepos, CURLOPT_POST, true);
+        curl_setopt($chAllRepos, CURLOPT_POSTFIELDS, $allReposQuery);
+        curl_setopt($chAllRepos, CURLOPT_HTTPHEADER, [
+            "User-Agent: PHP-GitActivityDashboard",
+            "Authorization: bearer " . GITHUB_TOKEN,
+            "Content-Type: application/json"
+        ]);
+
+        $allReposResp = curl_exec($chAllRepos);
+        $allReposData = json_decode($allReposResp, true);
+
+        $allProjectsList = [];
+        $totalAllTimeTokens = 0;
+
+        if (isset($allReposData['data']['user']['repositories']['nodes'])) {
+            $nodes = $allReposData['data']['user']['repositories']['nodes'];
+
+            foreach ($nodes as $node) {
+                $rFullName = $node['nameWithOwner'];
+                $rShortName = ucfirst($node['name']);
+                
+                // Eğer bu repo son aktivitelerde yer alıyorsa detaylı additions/deletions verisini kullanalım
+                $recentData = $repoStatsMap[$rFullName] ?? null;
+
+                $commitCount = 0;
+                if (isset($node['defaultBranchRef']['target']['history']['totalCount'])) {
+                    $commitCount = (int)$node['defaultBranchRef']['target']['history']['totalCount'];
+                }
+                if ($recentData && $recentData['commits'] > $commitCount) {
+                    $commitCount = $recentData['commits'];
+                }
+
+                $additions = $recentData ? $recentData['additions'] : ($commitCount * 45);
+                $deletions = $recentData ? $recentData['deletions'] : ($commitCount * 15);
+                $changedFiles = $recentData ? $recentData['changed_files'] : round($commitCount * 1.5);
+
+                $pTotalLines = $additions + round($deletions * 0.5);
+                $pLinesMins = round(($pTotalLines / $linesPerHour) * 60);
+
+                // Push oturum süresi
+                $pSessionMins = 0;
+                if ($recentData && count($recentData['timestamps']) > 0) {
+                    $pTimestamps = $recentData['timestamps'];
+                    sort($pTimestamps);
+                    $pStart = null;
+                    $pLast = null;
+                    foreach ($pTimestamps as $t) {
+                        if ($pLast === null) { $pStart = $t; $pLast = $t; }
+                        elseif (($t - $pLast) <= (3 * 3600)) { $pLast = $t; }
+                        else {
+                            $dur = ($pLast - $pStart) / 60;
+                            $pSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                            $pStart = $t; $pLast = $t;
+                        }
+                    }
+                    if ($pStart !== null) {
+                        $dur = ($pLast - $pStart) / 60;
+                        $pSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                    }
+                    $pSessionMins = round($pSessionMins);
+                } else {
+                    // Tahmini oturum süresi (commit başı ~25 dk)
+                    $pSessionMins = round($commitCount * 25);
+                }
+
+                $pTokens = (($additions + $deletions) * 12) + ($commitCount * 250);
+                $totalAllTimeTokens += $pTokens;
+
+                $allProjectsList[] = [
+                    'name' => $rFullName,
+                    'short_name' => $rShortName,
+                    'commits' => $commitCount,
+                    'additions' => $additions,
+                    'deletions' => $deletions,
+                    'changed_files' => $changedFiles,
+                    'estimated_tokens' => $pTokens,
+                    'formatted_tokens' => number_format($pTokens, 0, ',', '.'),
+                    'work_time_session' => $formatTime($pSessionMins),
+                    'work_time_lines' => $formatTime($pLinesMins),
+                    'session_minutes' => $pSessionMins,
+                    'lines_minutes' => $pLinesMins
+                ];
+            }
+
+            usort($allProjectsList, function($a, $b) {
+                return $b['estimated_tokens'] <=> $a['estimated_tokens'];
+            });
+        }
+
+        if (empty($allProjectsList)) {
+            $allProjectsList = $projectStatsList;
+            $totalAllTimeTokens = $totalProjectTokens;
+        }
+
+        $allTimeProjectStats = [
+            'project_stats' => $allProjectsList,
+            'total_estimated_tokens' => $totalAllTimeTokens,
+            'total_estimated_tokens_formatted' => number_format($totalAllTimeTokens, 0, ',', '.'),
+            'cached_at' => date('H:i - d.m.Y'),
+            'cache_expires_minutes' => round($allTimeCacheDuration / 60)
+        ];
+
+        @file_put_contents($allTimeCacheFile, json_encode($allTimeProjectStats, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
     $stats['project_stats'] = $projectStatsList;
-    $stats['total_estimated_tokens'] = $totalProjectTokens;
-    $stats['total_estimated_tokens_formatted'] = number_format($totalProjectTokens, 0, ',', '.');
+    $stats['all_time_project_stats'] = $allTimeProjectStats['project_stats'];
+    $stats['total_estimated_tokens'] = $allTimeProjectStats['total_estimated_tokens'];
+    $stats['total_estimated_tokens_formatted'] = $allTimeProjectStats['total_estimated_tokens_formatted'];
+    $stats['all_time_cache_info'] = [
+        'cached_at' => $allTimeProjectStats['cached_at'] ?? null,
+        'cache_expires_minutes' => $allTimeProjectStats['cache_expires_minutes'] ?? 120
+    ];
 
     $stats['commits'] = $periods['today']['commits'];
     $stats['additions'] = $periods['today']['additions'];
