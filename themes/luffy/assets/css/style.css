@@ -1239,7 +1239,33 @@ body {
 }
 .tab-settings .luffy-center-col #longTermStatsSection,
 .tab-settings .luffy-center-col #calendarSection,
-.tab-settings .luffy-center-col #avgStatsSection {
+.tab-settings .luffy-center-col #hourlyHeatmapSection,
+.tab-settings .luffy-center-col #avgStatsSection,
+.tab-settings .luffy-center-col #dailyLogSection,
+.tab-settings .luffy-center-col #tokensSection {
+    display: none !important;
+}
+
+/* Token Hesaplayıcı Sekmesi */
+.tab-tokens .luffy-sidebar-left,
+.tab-tokens .luffy-sidebar-right {
+    display: none !important;
+}
+.tab-tokens .luffy-main {
+    grid-template-columns: 1fr;
+}
+.tab-tokens .luffy-center-col {
+    display: block !important;
+}
+.tab-tokens .luffy-center-col #tokensSection {
+    display: block !important;
+}
+.tab-tokens .luffy-center-col #longTermStatsSection,
+.tab-tokens .luffy-center-col #calendarSection,
+.tab-tokens .luffy-center-col #hourlyHeatmapSection,
+.tab-tokens .luffy-center-col #avgStatsSection,
+.tab-tokens .luffy-center-col #dailyLogSection,
+.tab-tokens .luffy-center-col #settingsSection {
     display: none !important;
 }
 
