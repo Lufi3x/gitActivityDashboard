@@ -422,8 +422,12 @@ if ($httpcode === 200) {
         $pLinesMins = round(($pTotalLines / $linesPerHour) * 60);
         $pHybridMins = ($pSessionMins > 0 && $pLinesMins > 0) ? round(($pSessionMins + $pLinesMins) / 2) : max($pSessionMins, $pLinesMins);
 
-        // Tahmini Token Miktarı (Kod satırları ~12 token/satır + commit başı 250 token)
-        $pTokens = (($pData['additions'] + $pData['deletions']) * 12) + ($pData['commits'] * 250);
+        // Gerçek Harcanan Token (Temel Kod + Reasoning / Düşünme Tokenları Dahil)
+        // Temel Kod Tokenı: Satır başı 12 + Commit başı 250
+        // Reasoning (Düşünme) Tokenı: Akıl yürütme modellerinde ek satır başı 18 + Commit başı 400
+        $baseTokens = (($pData['additions'] + $pData['deletions']) * 12) + ($pData['commits'] * 250);
+        $reasoningTokens = (($pData['additions'] + $pData['deletions']) * 18) + ($pData['commits'] * 400);
+        $pTokens = $baseTokens + $reasoningTokens;
         $totalProjectTokens += $pTokens;
 
         $projectStatsList[] = [
@@ -433,8 +437,11 @@ if ($httpcode === 200) {
             'additions' => $pData['additions'],
             'deletions' => $pData['deletions'],
             'changed_files' => $pData['changed_files'],
+            'base_tokens' => $baseTokens,
+            'reasoning_tokens' => $reasoningTokens,
             'estimated_tokens' => $pTokens,
             'formatted_tokens' => number_format($pTokens, 0, ',', '.'),
+            'formatted_reasoning_tokens' => number_format($reasoningTokens, 0, ',', '.'),
             'work_time_session' => $formatTime($pSessionMins),
             'work_time_lines' => $formatTime($pLinesMins),
             'work_time_hybrid' => $formatTime($pHybridMins),
@@ -531,7 +538,10 @@ if ($httpcode === 200) {
                     $pSessionMins = round($commitCount * 25);
                 }
 
-                $pTokens = (($additions + $deletions) * 12) + ($commitCount * 250);
+                // Gerçek Harcanan Token (Temel Kod + Reasoning / Düşünme Tokenları Dahil)
+                $baseTokens = (($additions + $deletions) * 12) + ($commitCount * 250);
+                $reasoningTokens = (($additions + $deletions) * 18) + ($commitCount * 400);
+                $pTokens = $baseTokens + $reasoningTokens;
                 $totalAllTimeTokens += $pTokens;
 
                 $allProjectsList[] = [
@@ -541,8 +551,11 @@ if ($httpcode === 200) {
                     'additions' => $additions,
                     'deletions' => $deletions,
                     'changed_files' => $changedFiles,
+                    'base_tokens' => $baseTokens,
+                    'reasoning_tokens' => $reasoningTokens,
                     'estimated_tokens' => $pTokens,
                     'formatted_tokens' => number_format($pTokens, 0, ',', '.'),
+                    'formatted_reasoning_tokens' => number_format($reasoningTokens, 0, ',', '.'),
                     'work_time_session' => $formatTime($pSessionMins),
                     'work_time_lines' => $formatTime($pLinesMins),
                     'session_minutes' => $pSessionMins,
