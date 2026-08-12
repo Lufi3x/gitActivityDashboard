@@ -273,6 +273,20 @@ if ($httpcode === 200) {
         $avgDailyWorkMinutes = round(array_sum($dailyWorkDurations) / $daySpan);
     }
     
+    $formatTime = function($totalMins) {
+        $totalMins = round($totalMins);
+        if ($totalMins <= 0) return "0 Dakika";
+        if ($totalMins >= 60) {
+            $hours = floor($totalMins / 60);
+            $mins = $totalMins % 60;
+            return "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
+        }
+        return "{$totalMins} Dakika";
+    };
+
+    $linesPerHour = (defined('LINES_PER_HOUR') && LINES_PER_HOUR > 0) ? LINES_PER_HOUR : 40;
+    $calcMode = defined('WORK_TIME_CALC_MODE') ? WORK_TIME_CALC_MODE : 'session';
+
     foreach (['today', 'yesterday', 'last_24h'] as $pKey) {
         foreach ($periods[$pKey]['unique_repos'] as $repo => $val) {
             $periods[$pKey]['repos']++;
@@ -281,6 +295,7 @@ if ($httpcode === 200) {
             $periods[$pKey]['active_projects'][] = ucfirst($projectName);
         }
         
+        $totalMinutes = 0;
         if (count($periods[$pKey]['timestamps']) > 0) {
             sort($periods[$pKey]['timestamps']);
 
@@ -292,7 +307,6 @@ if ($httpcode === 200) {
             }
             $periods[$pKey]['hourly_activity'] = $hourlyCounts;
 
-            $totalMinutes = 0;
             $sessionStart = null;
             $lastTime = null;
             
@@ -331,15 +345,25 @@ if ($httpcode === 200) {
                 }
                 $totalMinutes += $sessionDurationMinutes;
             }
-            
-            $totalMinutes = round($totalMinutes);
-            if ($totalMinutes >= 60) {
-                $hours = floor($totalMinutes / 60);
-                $mins = $totalMinutes % 60;
-                $periods[$pKey]['work_time'] = "{$hours} Saat " . ($mins > 0 ? "{$mins} Dakika" : "");
-            } else {
-                $periods[$pKey]['work_time'] = "{$totalMinutes} Dakika";
-            }
+        }
+
+        $sessionMins = round($totalMinutes);
+        // Satır Sayısı & Yazım Hızına Dayalı Süre (Eklenenler tam, silinenler 0.5 çarpanla)
+        $totalChangedLines = $periods[$pKey]['additions'] + round($periods[$pKey]['deletions'] * 0.5);
+        $linesMins = round(($totalChangedLines / $linesPerHour) * 60);
+        // Hibrit Süre (Ortalama)
+        $hybridMins = ($sessionMins > 0 && $linesMins > 0) ? round(($sessionMins + $linesMins) / 2) : max($sessionMins, $linesMins);
+
+        $periods[$pKey]['work_time_session'] = $formatTime($sessionMins);
+        $periods[$pKey]['work_time_lines'] = $formatTime($linesMins);
+        $periods[$pKey]['work_time_hybrid'] = $formatTime($hybridMins);
+
+        if ($calcMode === 'lines') {
+            $periods[$pKey]['work_time'] = $periods[$pKey]['work_time_lines'];
+        } elseif ($calcMode === 'hybrid') {
+            $periods[$pKey]['work_time'] = $periods[$pKey]['work_time_hybrid'];
+        } else {
+            $periods[$pKey]['work_time'] = $periods[$pKey]['work_time_session'];
         }
     }
 
@@ -349,6 +373,9 @@ if ($httpcode === 200) {
     $stats['changed_files'] = $periods['today']['changed_files'];
     $stats['repos'] = $periods['today']['repos'];
     $stats['work_time'] = $periods['today']['work_time'];
+    $stats['work_time_session'] = $periods['today']['work_time_session'];
+    $stats['work_time_lines'] = $periods['today']['work_time_lines'];
+    $stats['work_time_hybrid'] = $periods['today']['work_time_hybrid'];
     $stats['active_projects'] = $periods['today']['active_projects'];
     $stats['hourly_activity'] = $periods['today']['hourly_activity'];
 
@@ -359,6 +386,9 @@ if ($httpcode === 200) {
         "changed_files" => $periods['today']['changed_files'],
         "repos" => $periods['today']['repos'],
         "work_time" => $periods['today']['work_time'],
+        "work_time_session" => $periods['today']['work_time_session'],
+        "work_time_lines" => $periods['today']['work_time_lines'],
+        "work_time_hybrid" => $periods['today']['work_time_hybrid'],
         "active_projects" => $periods['today']['active_projects'],
         "hourly_activity" => $periods['today']['hourly_activity']
     ];
@@ -369,6 +399,9 @@ if ($httpcode === 200) {
         "changed_files" => $periods['yesterday']['changed_files'],
         "repos" => $periods['yesterday']['repos'],
         "work_time" => $periods['yesterday']['work_time'],
+        "work_time_session" => $periods['yesterday']['work_time_session'],
+        "work_time_lines" => $periods['yesterday']['work_time_lines'],
+        "work_time_hybrid" => $periods['yesterday']['work_time_hybrid'],
         "active_projects" => $periods['yesterday']['active_projects'],
         "hourly_activity" => $periods['yesterday']['hourly_activity']
     ];
@@ -379,6 +412,9 @@ if ($httpcode === 200) {
         "changed_files" => $periods['last_24h']['changed_files'],
         "repos" => $periods['last_24h']['repos'],
         "work_time" => $periods['last_24h']['work_time'],
+        "work_time_session" => $periods['last_24h']['work_time_session'],
+        "work_time_lines" => $periods['last_24h']['work_time_lines'],
+        "work_time_hybrid" => $periods['last_24h']['work_time_hybrid'],
         "active_projects" => $periods['last_24h']['active_projects'],
         "hourly_activity" => $periods['last_24h']['hourly_activity']
     ];
@@ -579,7 +615,9 @@ if ($httpcode === 200) {
         "config" => [
             "show_system_logs" => $showLogs,
             "show_active_projects" => $showProjects,
-            "default_theme" => defined('DEFAULT_THEME') ? DEFAULT_THEME : 'theme-cyan'
+            "default_theme" => defined('DEFAULT_THEME') ? DEFAULT_THEME : 'theme-cyan',
+            "calc_mode" => defined('WORK_TIME_CALC_MODE') ? WORK_TIME_CALC_MODE : 'session',
+            "lines_per_hour" => defined('LINES_PER_HOUR') ? LINES_PER_HOUR : 40
         ]
     ]);
     

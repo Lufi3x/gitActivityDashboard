@@ -502,6 +502,39 @@ body {
     color: var(--danger-red);
 }
 
+/* Calc Mode Switcher (Push / Satır / Hibrit) */
+.calc-mode-switcher {
+    display: flex;
+    gap: 3px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2px;
+    border-radius: 4px;
+    border: 1px solid var(--panel-border);
+}
+
+.calc-mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 0.68rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calc-mode-btn:hover {
+    color: var(--text-primary);
+}
+
+.calc-mode-btn.active {
+    background: var(--header-red);
+    color: #fff;
+    box-shadow: 0 0 5px rgba(230, 46, 46, 0.5);
+}
+
 .active-modules-list {
     list-style: none;
     padding: 15px;

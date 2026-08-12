@@ -1,9 +1,11 @@
 let statsData = null;
+let currentCalcMode = localStorage.getItem('git_dash_calc_mode') || 'session';
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchActivity();
     initFullscreen();
     initPeriodSelector();
+    initCalcModeSelector();
     initTabs();
 });
 
@@ -75,6 +77,13 @@ async function fetchActivity() {
                         document.getElementById('realTodayCommits').textContent = result.stats.today ? (result.stats.today.commits || 0) : 0;
                         document.getElementById('realWeeklyCommits').textContent = result.stats.weekly_commits || 0;
                         document.getElementById('realMonthlyCommits').textContent = result.stats.monthly_commits || 0;
+                    }
+
+                    // Satır Bazlı Süre Kartı
+                    if (document.getElementById('linesTodayWorkTime')) {
+                        document.getElementById('linesTodayWorkTime').textContent = result.stats.today ? (result.stats.today.work_time_lines || "0dk") : "0dk";
+                        document.getElementById('linesYesterdayWorkTime').textContent = result.stats.yesterday ? (result.stats.yesterday.work_time_lines || "0dk") : "0dk";
+                        document.getElementById('lines24hWorkTime').textContent = result.stats.last_24h ? (result.stats.last_24h.work_time_lines || "0dk") : "0dk";
                     }
 
                     // Günlük Çalışma Günlüğü (Daily Log) Render
@@ -219,8 +228,26 @@ function updateStatsUI(period) {
     document.getElementById('statAdditions').textContent = '+' + pStats.additions.toLocaleString('tr-TR');
     document.getElementById('statDeletions').textContent = '-' + pStats.deletions.toLocaleString('tr-TR');
     document.getElementById('statRepos').textContent = pStats.repos;
+    
     if (document.getElementById('statWorkTime')) {
-        document.getElementById('statWorkTime').textContent = pStats.work_time || "0dk";
+        let workTimeVal = pStats.work_time;
+        let modeLabelText = "Kodlama Süresi";
+
+        if (currentCalcMode === 'lines' && pStats.work_time_lines) {
+            workTimeVal = pStats.work_time_lines;
+            modeLabelText = "Kodlama Süresi (Satır Hızı)";
+        } else if (currentCalcMode === 'hybrid' && pStats.work_time_hybrid) {
+            workTimeVal = pStats.work_time_hybrid;
+            modeLabelText = "Kodlama Süresi (Hibrit)";
+        } else if (pStats.work_time_session) {
+            workTimeVal = pStats.work_time_session;
+            modeLabelText = "Kodlama Süresi (Push Saati)";
+        }
+
+        document.getElementById('statWorkTime').textContent = workTimeVal || "0dk";
+        if (document.getElementById('calcModeLabel')) {
+            document.getElementById('calcModeLabel').textContent = modeLabelText;
+        }
     }
     
     // Aktif Modüller
@@ -464,6 +491,32 @@ function displayDailyLogItems(items, maxWorkMinutes) {
     });
 
     container.innerHTML = html;
+}
+
+function initCalcModeSelector() {
+    const buttons = document.querySelectorAll('.calc-mode-btn');
+    if (!buttons.length) return;
+
+    buttons.forEach(btn => {
+        if (btn.getAttribute('data-mode') === currentCalcMode) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            currentCalcMode = btn.getAttribute('data-mode');
+            localStorage.setItem('git_dash_calc_mode', currentCalcMode);
+
+            const activeBtn = document.querySelector('.period-btn.active');
+            const currentPeriod = activeBtn ? activeBtn.getAttribute('data-period') : 'today';
+            updateStatsUI(currentPeriod);
+        });
+    });
 }
 
 

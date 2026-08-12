@@ -121,9 +121,16 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                             <div class="stat-icon hourglass"><i class="fa-solid fa-hourglass-half"></i></div>
                             <div class="stat-info">
                                 <strong>SİSTEM SÜRESİ</strong>
-                                <span>Kodlama Süresi</span>
+                                <span id="calcModeLabel">Kodlama Süresi (Push Saati)</span>
                             </div>
-                            <div class="stat-num" id="statWorkTime">0dk</div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                                <div class="stat-num" id="statWorkTime">0dk</div>
+                                <div class="calc-mode-switcher" id="calcModeSwitcher">
+                                    <button class="calc-mode-btn active" data-mode="session" title="Push & Commit saat aralıklarına göre">Push</button>
+                                    <button class="calc-mode-btn" data-mode="lines" title="Yazılan/Değiştirilen satır sayısına göre">Satır</button>
+                                    <button class="calc-mode-btn" data-mode="hybrid" title="Her iki yöntemin ortalaması">Hibrit</button>
+                                </div>
+                            </div>
                         </li>
                     </ul>
                 </section>
@@ -285,6 +292,26 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                                     <span class="avg-val" id="realMonthlyCommits">0</span>
                                 </div>
                                 <div class="card-desc">- GERÇEKLEŞEN RAPORLAR -</div>
+                            </div>
+                        </div>
+
+                        <!-- Satır Bazlı Tahmini Süre Parşömeni -->
+                        <div class="parchment-card avg-card">
+                            <div class="card-inner">
+                                <h4 class="card-title"><i class="fa-solid fa-keyboard"></i> SATIR BAZLI SÜRE</h4>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">BUGÜN:</span>
+                                    <span class="avg-val" id="linesTodayWorkTime">0dk</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">DÜN:</span>
+                                    <span class="avg-val" id="linesYesterdayWorkTime">0dk</span>
+                                </div>
+                                <div class="avg-stat-row">
+                                    <span class="avg-label">24 SAAT:</span>
+                                    <span class="avg-val" id="lines24hWorkTime">0dk</span>
+                                </div>
+                                <div class="card-desc">- YAZIM HIZI TAHMİNİ -</div>
                             </div>
                         </div>
                     </div>

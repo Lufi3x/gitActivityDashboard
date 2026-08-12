@@ -47,6 +47,10 @@ define('SHOW_ACTIVE_PROJECTS', isset($envVariables['SHOW_ACTIVE_PROJECTS']) ? fi
 // Cache Süresi (Dakika cinsinden, varsayılan 10)
 define('CACHE_DURATION_MINUTES', isset($envVariables['CACHE_DURATION_MINUTES']) ? (int)trim($envVariables['CACHE_DURATION_MINUTES']) : 10);
 
+// Süre Hesaplama Modu ve Yazım Hızı (Saatte yazılan satır sayısı)
+define('WORK_TIME_CALC_MODE', isset($envVariables['WORK_TIME_CALC_MODE']) ? trim($envVariables['WORK_TIME_CALC_MODE']) : 'session');
+define('LINES_PER_HOUR', isset($envVariables['LINES_PER_HOUR']) ? (int)trim($envVariables['LINES_PER_HOUR']) : 40);
+
 
 if (empty(GITHUB_USERNAME) || empty(GITHUB_TOKEN)) {
     echo json_encode(['error' => 'GITHUB_USERNAME veya GITHUB_TOKEN eksik. Lütfen .env dosyanızı kontrol edin.']);
