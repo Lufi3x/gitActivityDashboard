@@ -78,12 +78,28 @@ if ($httpcode === 200) {
         "daily_log" => []
     ];
 
+    $repoStatsMap = [];
+
     foreach ($events as $event) {
         $type = $event['type'];
         $repoName = $event['repo']['name'];
         $createdAt = $event['created_at'];
         $eventTimestamp = strtotime($createdAt);
         $eventDate = date('Y-m-d', $eventTimestamp);
+
+        if (!isset($repoStatsMap[$repoName])) {
+            $parts = explode('/', $repoName);
+            $repoStatsMap[$repoName] = [
+                'name' => $repoName,
+                'short_name' => count($parts) > 1 ? $parts[1] : $repoName,
+                'commits' => 0,
+                'additions' => 0,
+                'deletions' => 0,
+                'changed_files' => 0,
+                'timestamps' => []
+            ];
+        }
+        $repoStatsMap[$repoName]['timestamps'][] = $eventTimestamp;
         
         $isToday = ($eventDate === $today);
         $isYesterday = ($eventDate === $yesterday);
@@ -136,12 +152,18 @@ if ($httpcode === 200) {
                                     if ($cDate === $today) $periods['today']['timestamps'][] = $cTimestamp;
                                     if ($cDate === $yesterday) $periods['yesterday']['timestamps'][] = $cTimestamp;
                                     if ($cTimestamp >= $twentyFourHoursAgo) $periods['last_24h']['timestamps'][] = $cTimestamp;
+                                    $repoStatsMap[$repoName]['timestamps'][] = $cTimestamp;
                                 }
                             }
                         }
                     }
                 }
             }
+
+            $repoStatsMap[$repoName]['commits'] += $commitCount;
+            $repoStatsMap[$repoName]['additions'] += $pushAdditions;
+            $repoStatsMap[$repoName]['deletions'] += $pushDeletions;
+            $repoStatsMap[$repoName]['changed_files'] += $pushChangedFiles;
 
             if (count($commits) > 0) {
                 $commitMessages = array_map(function($commit) { return $commit['message'] ?? ''; }, $commits);
@@ -366,6 +388,68 @@ if ($httpcode === 200) {
             $periods[$pKey]['work_time'] = $periods[$pKey]['work_time_session'];
         }
     }
+
+    // --- PROJE BAZLI ANALİZ VE TOKEN HESAPLAMALARI ---
+    $totalProjectTokens = 0;
+    $projectStatsList = [];
+    foreach ($repoStatsMap as $rName => $pData) {
+        $pTimestamps = $pData['timestamps'];
+        $pSessionMins = 0;
+        if (count($pTimestamps) > 0) {
+            sort($pTimestamps);
+            $pStart = null;
+            $pLast = null;
+            foreach ($pTimestamps as $t) {
+                if ($pLast === null) {
+                    $pStart = $t;
+                    $pLast = $t;
+                } elseif (($t - $pLast) <= (3 * 3600)) {
+                    $pLast = $t;
+                } else {
+                    $dur = ($pLast - $pStart) / 60;
+                    $pSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                    $pStart = $t;
+                    $pLast = $t;
+                }
+            }
+            if ($pStart !== null) {
+                $dur = ($pLast - $pStart) / 60;
+                $pSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+            }
+        }
+        $pSessionMins = round($pSessionMins);
+        $pTotalLines = $pData['additions'] + round($pData['deletions'] * 0.5);
+        $pLinesMins = round(($pTotalLines / $linesPerHour) * 60);
+        $pHybridMins = ($pSessionMins > 0 && $pLinesMins > 0) ? round(($pSessionMins + $pLinesMins) / 2) : max($pSessionMins, $pLinesMins);
+
+        // Tahmini Token Miktarı (Kod satırları ~12 token/satır + commit başı 250 token)
+        $pTokens = (($pData['additions'] + $pData['deletions']) * 12) + ($pData['commits'] * 250);
+        $totalProjectTokens += $pTokens;
+
+        $projectStatsList[] = [
+            'name' => $pData['name'],
+            'short_name' => ucfirst($pData['short_name']),
+            'commits' => $pData['commits'],
+            'additions' => $pData['additions'],
+            'deletions' => $pData['deletions'],
+            'changed_files' => $pData['changed_files'],
+            'estimated_tokens' => $pTokens,
+            'formatted_tokens' => number_format($pTokens, 0, ',', '.'),
+            'work_time_session' => $formatTime($pSessionMins),
+            'work_time_lines' => $formatTime($pLinesMins),
+            'work_time_hybrid' => $formatTime($pHybridMins),
+            'session_minutes' => $pSessionMins,
+            'lines_minutes' => $pLinesMins
+        ];
+    }
+
+    usort($projectStatsList, function($a, $b) {
+        return $b['estimated_tokens'] <=> $a['estimated_tokens'];
+    });
+
+    $stats['project_stats'] = $projectStatsList;
+    $stats['total_estimated_tokens'] = $totalProjectTokens;
+    $stats['total_estimated_tokens_formatted'] = number_format($totalProjectTokens, 0, ',', '.');
 
     $stats['commits'] = $periods['today']['commits'];
     $stats['additions'] = $periods['today']['additions'];

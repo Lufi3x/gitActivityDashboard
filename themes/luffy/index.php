@@ -352,6 +352,103 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                     </div>
                 </section>
 
+                <!-- Token & Proje Analizi Paneli -->
+                <section class="luffy-panel token-calc-panel" id="tokensSection" style="display: none;">
+                    <h3 class="panel-header" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <span><i class="fa-solid fa-calculator"></i> TOKEN & PROJE ANALİZİ</span>
+                        <span style="font-size: 0.75rem; color: #ffd700; letter-spacing: 1px;">AI TOKEN METRİKLERİ & KARŞILAŞTIRMA</span>
+                    </h3>
+                    <div style="padding: 20px;">
+                        
+                        <!-- Özet Kartları -->
+                        <div class="parchment-cards" style="margin-bottom: 20px;">
+                            <div class="parchment-card">
+                                <div class="card-inner">
+                                    <h4 class="card-title"><i class="fa-solid fa-microchip"></i> HARCANAN TOKEN</h4>
+                                    <div class="card-value" id="statTotalTokens" style="font-size: 2.8rem;">0</div>
+                                    <div class="card-desc">- TÜM PROJELER TOPLAMI -</div>
+                                </div>
+                            </div>
+                            <div class="parchment-card center-card">
+                                <div class="card-inner">
+                                    <h4 class="card-title"><i class="fa-solid fa-user-clock"></i> İNSAN YAZIMI SÜRE</h4>
+                                    <div class="card-value" id="statTotalHumanTime" style="font-size: 2.2rem; color: #00aa00;">0dk</div>
+                                    <div class="card-desc">- SATIR HIZI TAHMİNİ -</div>
+                                </div>
+                            </div>
+                            <div class="parchment-card">
+                                <div class="card-inner">
+                                    <h4 class="card-title"><i class="fa-solid fa-stopwatch"></i> PUSH OTURUM SÜRESİ</h4>
+                                    <div class="card-value" id="statTotalPushTime" style="font-size: 2.2rem;">0dk</div>
+                                    <div class="card-desc">- GIT PUSH ZAMANLARI -</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Proje Karşılaştırma Tablosu -->
+                        <h4 style="color: var(--danger-red); margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-table-list"></i> PROJE BAZLI KARŞILAŞTIRMA VE TOKEN DAĞILIMI
+                        </h4>
+                        <div class="table-responsive-wrapper">
+                            <table class="project-analytics-table">
+                                <thead>
+                                    <tr>
+                                        <th>PROJE ADI</th>
+                                        <th style="text-align:center;">COMMİT</th>
+                                        <th style="text-align:center;">DEĞİŞTİRİLEN SATIR</th>
+                                        <th style="text-align:center;">İNSAN SÜRESİ</th>
+                                        <th style="text-align:center;">PUSH SÜRESİ</th>
+                                        <th style="text-align:right;">HARCANAN TOKEN</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectAnalyticsTableBody">
+                                    <tr>
+                                        <td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">
+                                            Veriler yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- İnteraktif Token Simülatörü Widget -->
+                        <div class="token-simulator-box" style="margin-top: 25px;">
+                            <h4 style="color: var(--text-primary); margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 1px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-sliders"></i> CANLI TOKEN & SÜRE SİMÜLATÖRÜ
+                            </h4>
+                            <div class="simulator-grid">
+                                <div class="sim-input-group">
+                                    <label>Yazılan / Eklenen Satır Sayısı:</label>
+                                    <input type="number" id="simLineInput" value="500" min="1" max="1000000" placeholder="Örn: 500">
+                                </div>
+                                <div class="sim-input-group">
+                                    <label>Model Token Oranı (Token/Satır):</label>
+                                    <select id="simRatioSelect">
+                                        <option value="12">Standart Kod (12 Token/Satır)</option>
+                                        <option value="18">Detaylı Prompt & Kod (18 Token/Satır)</option>
+                                        <option value="25">Karmaşık Mimari / LLM (25 Token/Satır)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="sim-result-row">
+                                <div class="sim-res-card">
+                                    <span>Tahmini LLM Token:</span>
+                                    <strong id="simResultTokens" class="text-danger">6.000 Token</strong>
+                                </div>
+                                <div class="sim-res-card">
+                                    <span>Tahmini İnsan Yazımı Süre:</span>
+                                    <strong id="simResultHumanTime" class="text-success">12 Saat 30 Dk</strong>
+                                </div>
+                                <div class="sim-res-card">
+                                    <span>Gerekli Ortalama Prompt:</span>
+                                    <strong id="simResultPrompts">~15 İstek</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
                 <!-- Ayarlar Paneli -->
                 <section class="luffy-panel settings-panel" id="settingsSection" style="display: none;">
                     <h3 class="panel-header"><i class="fa-solid fa-gear"></i> PANEL AYARLARI</h3>
@@ -391,6 +488,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <a href="#" class="nav-item" data-tab="repos"><i class="fa-solid fa-book-journal-whills"></i> REPOLAR</a>
                 <a href="#" class="nav-item" data-tab="stats"><i class="fa-solid fa-chart-simple"></i> İSTATİSTİKLER</a>
                 <a href="#" class="nav-item" data-tab="daily"><i class="fa-solid fa-calendar-days"></i> GÜNLÜK LOG</a>
+                <a href="#" class="nav-item" data-tab="tokens"><i class="fa-solid fa-calculator"></i> TOKEN HESAPLAYICI</a>
                 <a href="#" class="nav-item" data-tab="activity"><i class="fa-solid fa-anchor"></i> AKTİVİTE</a>
                 <a href="#" class="nav-item" data-tab="settings"><i class="fa-solid fa-gear"></i> AYARLAR</a>
             </nav>

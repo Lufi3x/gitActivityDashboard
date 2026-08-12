@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFullscreen();
     initPeriodSelector();
     initCalcModeSelector();
+    initTokenSimulator();
     initTabs();
 });
 
@@ -84,6 +85,11 @@ async function fetchActivity() {
                         document.getElementById('linesTodayWorkTime').textContent = result.stats.today ? (result.stats.today.work_time_lines || "0dk") : "0dk";
                         document.getElementById('linesYesterdayWorkTime').textContent = result.stats.yesterday ? (result.stats.yesterday.work_time_lines || "0dk") : "0dk";
                         document.getElementById('lines24hWorkTime').textContent = result.stats.last_24h ? (result.stats.last_24h.work_time_lines || "0dk") : "0dk";
+                    }
+
+                    // Proje Bazlı Token & Analiz Tablosu Render
+                    if (result.stats.project_stats && result.stats.project_stats.length > 0) {
+                        renderProjectAnalyticsTable(result.stats.project_stats);
                     }
 
                     // Günlük Çalışma Günlüğü (Daily Log) Render
@@ -517,6 +523,92 @@ function initCalcModeSelector() {
             updateStatsUI(currentPeriod);
         });
     });
+}
+
+function renderProjectAnalyticsTable(projects) {
+    const tableBody = document.getElementById('projectAnalyticsTableBody');
+    if (!tableBody) return;
+
+    if (!projects || projects.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">Proje analitik verisi bulunamadı.</td></tr>`;
+        return;
+    }
+
+    let totalTokensSum = 0;
+    let totalHumanMinsSum = 0;
+    let totalPushMinsSum = 0;
+
+    let rowsHtml = '';
+    projects.forEach(p => {
+        totalTokensSum += (p.estimated_tokens || 0);
+        totalHumanMinsSum += (p.lines_minutes || 0);
+        totalPushMinsSum += (p.session_minutes || 0);
+
+        const formattedTokens = p.formatted_tokens || (p.estimated_tokens ? p.estimated_tokens.toLocaleString('tr-TR') : '0');
+        const changeStr = `+${p.additions.toLocaleString('tr-TR')} / -${p.deletions.toLocaleString('tr-TR')}`;
+
+        rowsHtml += `
+            <tr>
+                <td><strong>${p.short_name}</strong> <br><small style="color: var(--text-muted); font-size:0.75rem;">${p.name}</small></td>
+                <td style="text-align:center;"><span class="badge" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${p.commits} Commit</span></td>
+                <td style="text-align:center; color: var(--text-muted);">${changeStr}</td>
+                <td style="text-align:center; font-weight:bold; color: #00aa00;">${p.work_time_lines}</td>
+                <td style="text-align:center; font-weight:bold; color: var(--danger-red);">${p.work_time_session}</td>
+                <td style="text-align:right;"><span class="token-badge">${formattedTokens} Token</span></td>
+            </tr>
+        `;
+    });
+
+    tableBody.innerHTML = rowsHtml;
+
+    // Özet Kartlarını Güncelle
+    if (document.getElementById('statTotalTokens')) {
+        document.getElementById('statTotalTokens').textContent = totalTokensSum > 1000000 
+            ? (totalTokensSum / 1000000).toFixed(2) + 'M' 
+            : totalTokensSum.toLocaleString('tr-TR');
+    }
+    if (document.getElementById('statTotalHumanTime')) {
+        const h = Math.floor(totalHumanMinsSum / 60);
+        const m = totalHumanMinsSum % 60;
+        document.getElementById('statTotalHumanTime').textContent = h >= 1 ? `${h}s ${m}dk` : `${m}dk`;
+    }
+    if (document.getElementById('statTotalPushTime')) {
+        const h = Math.floor(totalPushMinsSum / 60);
+        const m = totalPushMinsSum % 60;
+        document.getElementById('statTotalPushTime').textContent = h >= 1 ? `${h}s ${m}dk` : `${m}dk`;
+    }
+}
+
+function initTokenSimulator() {
+    const lineInput = document.getElementById('simLineInput');
+    const ratioSelect = document.getElementById('simRatioSelect');
+    if (!lineInput || !ratioSelect) return;
+
+    const calculateSim = () => {
+        const lines = parseInt(lineInput.value) || 0;
+        const ratio = parseInt(ratioSelect.value) || 12;
+
+        const tokens = lines * ratio;
+        const humanMins = Math.round((lines / 40) * 60);
+        const h = Math.floor(humanMins / 60);
+        const m = humanMins % 60;
+        const humanTimeStr = h >= 1 ? `${h} Saat ${m} Dk` : `${m} Dk`;
+        const prompts = Math.ceil(lines / 35);
+
+        if (document.getElementById('simResultTokens')) {
+            document.getElementById('simResultTokens').textContent = tokens.toLocaleString('tr-TR') + ' Token';
+        }
+        if (document.getElementById('simResultHumanTime')) {
+            document.getElementById('simResultHumanTime').textContent = humanTimeStr;
+        }
+        if (document.getElementById('simResultPrompts')) {
+            document.getElementById('simResultPrompts').textContent = `~${prompts} İstek`;
+        }
+    };
+
+    lineInput.addEventListener('input', calculateSim);
+    ratioSelect.addEventListener('change', calculateSim);
+    calculateSim();
 }
 
 
