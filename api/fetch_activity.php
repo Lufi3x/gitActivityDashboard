@@ -463,6 +463,94 @@ if ($httpcode === 200) {
         $cachedAllTime = json_decode(file_get_contents($allTimeCacheFile), true);
         if (is_array($cachedAllTime) && !empty($cachedAllTime['project_stats'])) {
             $allTimeProjectStats = $cachedAllTime;
+
+            // Ön bellek süresi boyunca yeni commit atılırsa ön bellekteki verileri dinamik güncelle
+            $updatedProjectStats = [];
+            $totalAllTimeTokens = 0;
+
+            foreach ($allTimeProjectStats['project_stats'] as $pItem) {
+                $rFullName = $pItem['name'];
+                if (isset($repoStatsMap[$rFullName])) {
+                    $rec = $repoStatsMap[$rFullName];
+                    $currentRecentCommits = $rec['commits'] ?? 0;
+                    $currentRecentAdditions = $rec['additions'] ?? 0;
+                    $currentRecentDeletions = $rec['deletions'] ?? 0;
+                    $currentRecentFiles = $rec['changed_files'] ?? 0;
+
+                    $currentRecentSessionMins = 0;
+                    if (!empty($rec['timestamps'])) {
+                        $pTimestamps = $rec['timestamps'];
+                        sort($pTimestamps);
+                        $pStart = null;
+                        $pLast = null;
+                        foreach ($pTimestamps as $t) {
+                            if ($pLast === null) { $pStart = $t; $pLast = $t; }
+                            elseif (($t - $pLast) <= (3 * 3600)) { $pLast = $t; }
+                            else {
+                                $dur = ($pLast - $pStart) / 60;
+                                $currentRecentSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                                $pStart = $t; $pLast = $t;
+                            }
+                        }
+                        if ($pStart !== null) {
+                            $dur = ($pLast - $pStart) / 60;
+                            $currentRecentSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                        }
+                        $currentRecentSessionMins = round($currentRecentSessionMins);
+                    }
+
+                    $prevRecentCommits = $pItem['recent_commits'] ?? 0;
+                    $prevRecentAdditions = $pItem['recent_additions'] ?? 0;
+                    $prevRecentDeletions = $pItem['recent_deletions'] ?? 0;
+                    $prevRecentFiles = $pItem['recent_changed_files'] ?? 0;
+                    $prevRecentSessionMins = $pItem['recent_session_minutes'] ?? 0;
+
+                    $deltaCommits = max(0, $currentRecentCommits - $prevRecentCommits);
+                    $deltaAdditions = max(0, $currentRecentAdditions - $prevRecentAdditions);
+                    $deltaDeletions = max(0, $currentRecentDeletions - $prevRecentDeletions);
+                    $deltaFiles = max(0, $currentRecentFiles - $prevRecentFiles);
+                    $deltaSessionMins = max(0, $currentRecentSessionMins - $prevRecentSessionMins);
+
+                    if ($deltaCommits > 0 || $deltaAdditions > 0 || $deltaDeletions > 0) {
+                        $pItem['commits'] += $deltaCommits;
+                        $pItem['additions'] += $deltaAdditions;
+                        $pItem['deletions'] += $deltaDeletions;
+                        $pItem['changed_files'] += $deltaFiles;
+                        $pItem['session_minutes'] += $deltaSessionMins;
+
+                        $pItem['recent_commits'] = $currentRecentCommits;
+                        $pItem['recent_additions'] = $currentRecentAdditions;
+                        $pItem['recent_deletions'] = $currentRecentDeletions;
+                        $pItem['recent_changed_files'] = $currentRecentFiles;
+                        $pItem['recent_session_minutes'] = $currentRecentSessionMins;
+
+                        $baseTokens = (($pItem['additions'] + $pItem['deletions']) * 12) + ($pItem['commits'] * 250);
+                        $reasoningTokens = (($pItem['additions'] + $pItem['deletions']) * 18) + ($pItem['commits'] * 400);
+                        $pTokens = $baseTokens + $reasoningTokens;
+
+                        $pItem['base_tokens'] = $baseTokens;
+                        $pItem['reasoning_tokens'] = $reasoningTokens;
+                        $pItem['estimated_tokens'] = $pTokens;
+                        $pItem['formatted_tokens'] = number_format($pTokens, 0, ',', '.');
+                        $pItem['formatted_reasoning_tokens'] = number_format($reasoningTokens, 0, ',', '.');
+
+                        $pTotalLines = $pItem['additions'] + round($pItem['deletions'] * 0.5);
+                        $pItem['lines_minutes'] = round(($pTotalLines / $linesPerHour) * 60);
+                        $pItem['work_time_lines'] = $formatTime($pItem['lines_minutes']);
+                        $pItem['work_time_session'] = $formatTime($pItem['session_minutes']);
+                    }
+                }
+                $totalAllTimeTokens += $pItem['estimated_tokens'];
+                $updatedProjectStats[] = $pItem;
+            }
+
+            usort($updatedProjectStats, function($a, $b) {
+                return $b['estimated_tokens'] <=> $a['estimated_tokens'];
+            });
+
+            $allTimeProjectStats['project_stats'] = $updatedProjectStats;
+            $allTimeProjectStats['total_estimated_tokens'] = $totalAllTimeTokens;
+            $allTimeProjectStats['total_estimated_tokens_formatted'] = number_format($totalAllTimeTokens, 0, ',', '.');
         }
     }
 
@@ -493,7 +581,7 @@ if ($httpcode === 200) {
             foreach ($nodes as $node) {
                 $rFullName = $node['nameWithOwner'];
                 $rShortName = ucfirst($node['name']);
-                
+
                 // Eğer bu repo son aktivitelerde yer alıyorsa detaylı additions/deletions verisini kullanalım
                 $recentData = $repoStatsMap[$rFullName] ?? null;
 
@@ -501,20 +589,29 @@ if ($httpcode === 200) {
                 if (isset($node['defaultBranchRef']['target']['history']['totalCount'])) {
                     $commitCount = (int)$node['defaultBranchRef']['target']['history']['totalCount'];
                 }
-                if ($recentData && $recentData['commits'] > $commitCount) {
-                    $commitCount = $recentData['commits'];
+
+                $recentCommits = ($recentData && isset($recentData['commits'])) ? $recentData['commits'] : 0;
+                $recentAdditions = ($recentData && isset($recentData['additions'])) ? $recentData['additions'] : 0;
+                $recentDeletions = ($recentData && isset($recentData['deletions'])) ? $recentData['deletions'] : 0;
+                $recentChangedFiles = ($recentData && isset($recentData['changed_files'])) ? $recentData['changed_files'] : 0;
+
+                if ($recentCommits > $commitCount) {
+                    $commitCount = $recentCommits;
                 }
 
-                $additions = $recentData ? $recentData['additions'] : ($commitCount * 45);
-                $deletions = $recentData ? $recentData['deletions'] : ($commitCount * 15);
-                $changedFiles = $recentData ? $recentData['changed_files'] : round($commitCount * 1.5);
+                $olderCommits = max(0, $commitCount - $recentCommits);
+
+                // Tüm Zamanlar Verileri: Gerçek Son Değişiklikler + Eski Commitler İçin Tahminler
+                $additions = $recentAdditions + ($olderCommits * 45);
+                $deletions = $recentDeletions + ($olderCommits * 15);
+                $changedFiles = $recentChangedFiles + (int)round($olderCommits * 1.5);
 
                 $pTotalLines = $additions + round($deletions * 0.5);
                 $pLinesMins = round(($pTotalLines / $linesPerHour) * 60);
 
-                // Push oturum süresi
-                $pSessionMins = 0;
-                if ($recentData && count($recentData['timestamps']) > 0) {
+                // Push oturum süresi (Son aktivitelerdeki gerçek oturum + Eski commitler için tahmini süre)
+                $recentSessionMins = 0;
+                if ($recentData && !empty($recentData['timestamps'])) {
                     $pTimestamps = $recentData['timestamps'];
                     sort($pTimestamps);
                     $pStart = null;
@@ -524,19 +621,18 @@ if ($httpcode === 200) {
                         elseif (($t - $pLast) <= (3 * 3600)) { $pLast = $t; }
                         else {
                             $dur = ($pLast - $pStart) / 60;
-                            $pSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                            $recentSessionMins += ($dur < 45) ? 45 : ($dur + 30);
                             $pStart = $t; $pLast = $t;
                         }
                     }
                     if ($pStart !== null) {
                         $dur = ($pLast - $pStart) / 60;
-                        $pSessionMins += ($dur < 45) ? 45 : ($dur + 30);
+                        $recentSessionMins += ($dur < 45) ? 45 : ($dur + 30);
                     }
-                    $pSessionMins = round($pSessionMins);
-                } else {
-                    // Tahmini oturum süresi (commit başı ~25 dk)
-                    $pSessionMins = round($commitCount * 25);
+                    $recentSessionMins = round($recentSessionMins);
                 }
+                $olderSessionMins = round($olderCommits * 25);
+                $pSessionMins = $recentSessionMins + $olderSessionMins;
 
                 // Gerçek Harcanan Token (Temel Kod + Reasoning / Düşünme Tokenları Dahil)
                 $baseTokens = (($additions + $deletions) * 12) + ($commitCount * 250);
@@ -551,6 +647,11 @@ if ($httpcode === 200) {
                     'additions' => $additions,
                     'deletions' => $deletions,
                     'changed_files' => $changedFiles,
+                    'recent_commits' => $recentCommits,
+                    'recent_additions' => $recentAdditions,
+                    'recent_deletions' => $recentDeletions,
+                    'recent_changed_files' => $recentChangedFiles,
+                    'recent_session_minutes' => $recentSessionMins,
                     'base_tokens' => $baseTokens,
                     'reasoning_tokens' => $reasoningTokens,
                     'estimated_tokens' => $pTokens,
