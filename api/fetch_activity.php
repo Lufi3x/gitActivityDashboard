@@ -15,7 +15,7 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     exit;
 }
 
-$url = "https://api.github.com/users/" . GITHUB_USERNAME . "/events";
+$url = "https://api.github.com/users/" . GITHUB_USERNAME . "/events?per_page=100";
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
@@ -746,9 +746,9 @@ if ($httpcode === 200) {
         "hourly_activity" => $periods['last_24h']['hourly_activity']
     ];
     
-    // --- GRAPHQL BÖLÜMÜ (KATKI TAKVİMİ) ---
+    // --- GRAPHQL BÖLÜMÜ (KATKI TAKVİMİ VE SON REPOLAR) ---
     $graphqlUrl = "https://api.github.com/graphql";
-    $query = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { contributionsCollection { contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } } } } }"}';
+    $query = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { contributionsCollection { contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } } } repositories(first: 30, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner pushedAt } } } }"}';
     
     $chGraph = curl_init();
     curl_setopt($chGraph, CURLOPT_URL, $graphqlUrl);
@@ -825,6 +825,39 @@ if ($httpcode === 200) {
             }
             if ($yesterdayContribs > $stats['yesterday']['commits']) {
                 $stats['yesterday']['commits'] = $yesterdayContribs;
+            }
+
+            // GraphQL üzerinden son pushlanan repoları kontrol edip aktif modüllere ekle
+            if (isset($graphData['data']['user']['repositories']['nodes'])) {
+                $recentPushedNodes = $graphData['data']['user']['repositories']['nodes'];
+                foreach ($recentPushedNodes as $pNode) {
+                    if (!empty($pNode['pushedAt'])) {
+                        $pushedTs = strtotime($pNode['pushedAt']);
+                        $pushedDate = date('Y-m-d', $pushedTs);
+                        $rName = ucfirst($pNode['name']);
+
+                        if ($pushedDate === $todayDate) {
+                            if (!in_array($rName, $stats['today']['active_projects'])) {
+                                $stats['today']['active_projects'][] = $rName;
+                            }
+                        }
+                        if ($pushedDate === $yesterdayDate) {
+                            if (!in_array($rName, $stats['yesterday']['active_projects'])) {
+                                $stats['yesterday']['active_projects'][] = $rName;
+                            }
+                        }
+                        if ($pushedTs >= $twentyFourHoursAgo) {
+                            if (!in_array($rName, $stats['last_24h']['active_projects'])) {
+                                $stats['last_24h']['active_projects'][] = $rName;
+                            }
+                        }
+                    }
+                }
+                $stats['today']['repos'] = count($stats['today']['active_projects']);
+                $stats['yesterday']['repos'] = count($stats['yesterday']['active_projects']);
+                $stats['last_24h']['repos'] = count($stats['last_24h']['active_projects']);
+                $stats['repos'] = $stats['today']['repos'];
+                $stats['active_projects'] = $stats['today']['active_projects'];
             }
 
             // ========================================================
