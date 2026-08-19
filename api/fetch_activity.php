@@ -928,6 +928,13 @@ if ($httpcode === 200) {
                 $stats['deletions'] = $extraDeletions;
             }
 
+            // 24 Saatlik istatistikleri de senkronize et (Bugün tamamen son 24 saatin içindedir)
+            $stats['last_24h']['commits'] = max($stats['last_24h']['commits'], $stats['today']['commits']);
+            $stats['last_24h']['changed_files'] = max($stats['last_24h']['changed_files'], $stats['today']['changed_files']);
+            $stats['last_24h']['additions'] = max($stats['last_24h']['additions'], $stats['today']['additions']);
+            $stats['last_24h']['deletions'] = max($stats['last_24h']['deletions'], $stats['today']['deletions']);
+            $stats['last_24h']['repos'] = max($stats['last_24h']['repos'], $stats['today']['repos']);
+
             // Gerçek zaman damgalarına göre süreyi yeniden hesapla
             if (count($todayAllTimestamps) > 1) {
                 sort($todayAllTimestamps);
@@ -968,15 +975,22 @@ if ($httpcode === 200) {
                 $stats['work_time_lines'] = $stats['today']['work_time_lines'];
                 $stats['work_time_hybrid'] = $stats['today']['work_time_hybrid'];
 
+                $stats['last_24h']['work_time_session'] = $stats['today']['work_time_session'];
+                $stats['last_24h']['work_time_lines'] = $stats['today']['work_time_lines'];
+                $stats['last_24h']['work_time_hybrid'] = $stats['today']['work_time_hybrid'];
+
                 if ($calcMode === 'lines') {
                     $stats['work_time'] = $stats['work_time_lines'];
                     $stats['today']['work_time'] = $stats['today']['work_time_lines'];
+                    $stats['last_24h']['work_time'] = $stats['today']['work_time_lines'];
                 } elseif ($calcMode === 'hybrid') {
                     $stats['work_time'] = $stats['work_time_hybrid'];
                     $stats['today']['work_time'] = $stats['today']['work_time_hybrid'];
+                    $stats['last_24h']['work_time'] = $stats['today']['work_time_hybrid'];
                 } else {
                     $stats['work_time'] = $stats['work_time_session'];
                     $stats['today']['work_time'] = $stats['today']['work_time_session'];
+                    $stats['last_24h']['work_time'] = $stats['today']['work_time_session'];
                 }
             }
 
