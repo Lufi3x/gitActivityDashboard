@@ -827,7 +827,12 @@ if ($httpcode === 200) {
                 $stats['yesterday']['commits'] = $yesterdayContribs;
             }
 
-            // GraphQL üzerinden son pushlanan repoları kontrol edip aktif modüllere ekle
+            // GraphQL üzerinden son pushlanan repoları kontrol edip aktif modüllere ekle ve gerçek diff verilerini çek
+            $extraAdditions = 0;
+            $extraDeletions = 0;
+            $extraFiles = 0;
+            $todayAllTimestamps = $periods['today']['timestamps'] ?? [];
+
             if (isset($graphData['data']['user']['repositories']['nodes'])) {
                 $recentPushedNodes = $graphData['data']['user']['repositories']['nodes'];
                 foreach ($recentPushedNodes as $pNode) {
@@ -835,10 +840,60 @@ if ($httpcode === 200) {
                         $pushedTs = strtotime($pNode['pushedAt']);
                         $pushedDate = date('Y-m-d', $pushedTs);
                         $rName = ucfirst($pNode['name']);
+                        $rFullName = $pNode['nameWithOwner'] ?? (GITHUB_USERNAME . '/' . $pNode['name']);
 
                         if ($pushedDate === $todayDate) {
                             if (!in_array($rName, $stats['today']['active_projects'])) {
                                 $stats['today']['active_projects'][] = $rName;
+                            }
+
+                            // Bu reponun bugünkü commitlerini çek
+                            $sinceToday = date('Y-m-d\T00:00:00\Z', strtotime('today'));
+                            $cUrl = "https://api.github.com/repos/{$rFullName}/commits?since={$sinceToday}&per_page=100";
+                            $chCommits = curl_init();
+                            curl_setopt($chCommits, CURLOPT_URL, $cUrl);
+                            curl_setopt($chCommits, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($chCommits, CURLOPT_HTTPHEADER, [
+                                "User-Agent: PHP-GitActivityDashboard",
+                                "Authorization: token " . GITHUB_TOKEN,
+                                "Accept: application/vnd.github.v3+json"
+                            ]);
+                            $cResp = curl_exec($chCommits);
+                            if (curl_getinfo($chCommits, CURLINFO_HTTP_CODE) === 200) {
+                                $cList = json_decode($cResp, true);
+                                if (is_array($cList) && count($cList) > 0) {
+                                    foreach ($cList as $cItem) {
+                                        $cDateStr = $cItem['commit']['author']['date'] ?? ($cItem['commit']['committer']['date'] ?? null);
+                                        if ($cDateStr) {
+                                            $todayAllTimestamps[] = strtotime($cDateStr);
+                                        }
+                                    }
+
+                                    $headSha = $cList[0]['sha'];
+                                    $oldestSha = end($cList);
+                                    $beforeSha = $oldestSha['parents'][0]['sha'] ?? $oldestSha['sha'];
+
+                                    $compareUrl = "https://api.github.com/repos/{$rFullName}/compare/{$beforeSha}...{$headSha}";
+                                    $chComp = curl_init();
+                                    curl_setopt($chComp, CURLOPT_URL, $compareUrl);
+                                    curl_setopt($chComp, CURLOPT_RETURNTRANSFER, true);
+                                    curl_setopt($chComp, CURLOPT_HTTPHEADER, [
+                                        "User-Agent: PHP-GitActivityDashboard",
+                                        "Authorization: token " . GITHUB_TOKEN,
+                                        "Accept: application/vnd.github.v3+json"
+                                    ]);
+                                    $compRes = curl_exec($chComp);
+                                    if (curl_getinfo($chComp, CURLINFO_HTTP_CODE) === 200) {
+                                        $compData = json_decode($compRes, true);
+                                        if (isset($compData['files']) && is_array($compData['files'])) {
+                                            $extraFiles += count($compData['files']);
+                                            foreach ($compData['files'] as $file) {
+                                                $extraAdditions += $file['additions'] ?? 0;
+                                                $extraDeletions += $file['deletions'] ?? 0;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                         if ($pushedDate === $yesterdayDate) {
@@ -858,6 +913,71 @@ if ($httpcode === 200) {
                 $stats['last_24h']['repos'] = count($stats['last_24h']['active_projects']);
                 $stats['repos'] = $stats['today']['repos'];
                 $stats['active_projects'] = $stats['today']['active_projects'];
+            }
+
+            if ($extraFiles > $stats['today']['changed_files']) {
+                $stats['today']['changed_files'] = $extraFiles;
+                $stats['changed_files'] = $extraFiles;
+            }
+            if ($extraAdditions > $stats['today']['additions']) {
+                $stats['today']['additions'] = $extraAdditions;
+                $stats['additions'] = $extraAdditions;
+            }
+            if ($extraDeletions > $stats['today']['deletions']) {
+                $stats['today']['deletions'] = $extraDeletions;
+                $stats['deletions'] = $extraDeletions;
+            }
+
+            // Gerçek zaman damgalarına göre süreyi yeniden hesapla
+            if (count($todayAllTimestamps) > 1) {
+                sort($todayAllTimestamps);
+                $sessionStart = null;
+                $lastTime = null;
+                $maxGap = 3 * 3600;
+                $minSessionMinutes = 45;
+                $postSessionBuffer = 30;
+                $calcMins = 0;
+
+                foreach ($todayAllTimestamps as $time) {
+                    if ($lastTime === null) {
+                        $sessionStart = $time;
+                        $lastTime = $time;
+                    } elseif (($time - $lastTime) <= $maxGap) {
+                        $lastTime = $time;
+                    } else {
+                        $dur = ($lastTime - $sessionStart) / 60;
+                        $calcMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
+                        $sessionStart = $time;
+                        $lastTime = $time;
+                    }
+                }
+                if ($sessionStart !== null) {
+                    $dur = ($lastTime - $sessionStart) / 60;
+                    $calcMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
+                }
+
+                $sessionMins = round($calcMins);
+                $totalChangedLines = $stats['today']['additions'] + round($stats['today']['deletions'] * 0.5);
+                $linesMins = round(($totalChangedLines / $linesPerHour) * 60);
+                $hybridMins = ($sessionMins > 0 && $linesMins > 0) ? round(($sessionMins + $linesMins) / 2) : max($sessionMins, $linesMins);
+
+                $stats['today']['work_time_session'] = $formatTime($sessionMins);
+                $stats['today']['work_time_lines'] = $formatTime($linesMins);
+                $stats['today']['work_time_hybrid'] = $formatTime($hybridMins);
+                $stats['work_time_session'] = $stats['today']['work_time_session'];
+                $stats['work_time_lines'] = $stats['today']['work_time_lines'];
+                $stats['work_time_hybrid'] = $stats['today']['work_time_hybrid'];
+
+                if ($calcMode === 'lines') {
+                    $stats['work_time'] = $stats['work_time_lines'];
+                    $stats['today']['work_time'] = $stats['today']['work_time_lines'];
+                } elseif ($calcMode === 'hybrid') {
+                    $stats['work_time'] = $stats['work_time_hybrid'];
+                    $stats['today']['work_time'] = $stats['today']['work_time_hybrid'];
+                } else {
+                    $stats['work_time'] = $stats['work_time_session'];
+                    $stats['today']['work_time'] = $stats['today']['work_time_session'];
+                }
             }
 
             // ========================================================
