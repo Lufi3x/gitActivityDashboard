@@ -805,6 +805,28 @@ if ($httpcode === 200) {
                 }
             }
 
+            // Dünün katkı sayısını GraphQL günlerinden bul
+            $yesterdayDate = date('Y-m-d', strtotime('-1 day'));
+            $yesterdayContribs = 0;
+            foreach ($allDays as $calDay) {
+                if ($calDay['date'] === $yesterdayDate) {
+                    $yesterdayContribs = $calDay['contributionCount'];
+                    break;
+                }
+            }
+
+            // GraphQL'den gelen gerçek katkı/commit sayıları Events API'den yüksekse sol panel ve periyotları senkronize et
+            if ($todayContribs > $stats['today']['commits']) {
+                $stats['today']['commits'] = $todayContribs;
+                $stats['commits'] = $todayContribs;
+                if ($todayContribs > $stats['last_24h']['commits']) {
+                    $stats['last_24h']['commits'] = $todayContribs;
+                }
+            }
+            if ($yesterdayContribs > $stats['yesterday']['commits']) {
+                $stats['yesterday']['commits'] = $yesterdayContribs;
+            }
+
             // ========================================================
             // KATKIYA DAYALI SÜRE TAHMİN ORANI (minutesPerContribution)
             // ========================================================
