@@ -140,7 +140,7 @@ async function fetchActivity(forceRefresh = false) {
                             });
 
                             dayDiv.addEventListener('mouseleave', () => {
-                                document.getElementById('globalTooltip').classList.remove('show');
+                                hideGlobalTooltip();
                             });
 
                             weekDiv.appendChild(dayDiv);
@@ -348,8 +348,7 @@ function renderHourlyHeatmap(period) {
         });
 
         col.addEventListener('mouseleave', () => {
-            const globalTooltip = document.getElementById('globalTooltip');
-            if (globalTooltip) globalTooltip.classList.remove('show');
+            hideGlobalTooltip();
         });
 
         container.appendChild(col);
@@ -369,6 +368,14 @@ function initPeriodSelector() {
     });
 }
 
+function hideGlobalTooltip() {
+    const globalTooltip = document.getElementById('globalTooltip');
+    if (globalTooltip) {
+        globalTooltip.classList.remove('show');
+        globalTooltip.style.display = 'none';
+    }
+}
+
 function initTabs() {
     const navItems = document.querySelectorAll('.footer-nav .nav-item');
     const dashboard = document.querySelector('.luffy-dashboard');
@@ -377,10 +384,16 @@ function initTabs() {
     if (dashboard && !dashboard.classList.contains('tab-home')) {
         dashboard.classList.add('tab-home');
     }
+
+    // Sayfa kaydırıldığında tooltip'i kapat
+    window.addEventListener('scroll', hideGlobalTooltip, { passive: true });
     
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
+            
+            // Sekme değiştirildiğinde açık kalan tooltip'leri mutlaka kapat
+            hideGlobalTooltip();
             
             const tab = item.getAttribute('data-tab');
             if (!tab) return;
