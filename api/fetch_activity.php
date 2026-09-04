@@ -549,8 +549,10 @@ if ($httpcode === 200) {
                         $pItem['formatted_tokens'] = number_format($pTokens, 0, ',', '.');
                         $pItem['formatted_reasoning_tokens'] = number_format($reasoningTokens, 0, ',', '.');
 
-                        $pTotalLines = $pItem['additions'] + round($pItem['deletions'] * 0.5);
-                        $pItem['lines_minutes'] = round(($pTotalLines / $linesPerHour) * 60);
+                        $targetLines = (isset($pItem['code_lines']) && $pItem['code_lines'] > 0) 
+                            ? $pItem['code_lines'] 
+                            : ($pItem['additions'] + round($pItem['deletions'] * 0.5));
+                        $pItem['lines_minutes'] = round(($targetLines / $linesPerHour) * 60);
                         $pItem['work_time_lines'] = $formatTime($pItem['lines_minutes']);
                         $pItem['work_time_session'] = $formatTime($pItem['session_minutes']);
                     }
@@ -691,6 +693,9 @@ if ($httpcode === 200) {
                     $codeLines = max(10, $additions - $deletions);
                 }
                 $totalAllTimeCodeLines += $codeLines;
+
+                // İnsan yazımı süresi: Doğrudan projenin gerçek kaynak kod satırı (LOC) üzerinden hesaplanır
+                $pLinesMins = round(($codeLines / $linesPerHour) * 60);
 
                 $allProjectsList[] = [
                     'name' => $rFullName,
