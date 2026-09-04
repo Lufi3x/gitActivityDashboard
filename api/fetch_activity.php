@@ -576,13 +576,14 @@ if ($httpcode === 200) {
 
     if (empty($allTimeProjectStats)) {
         // GraphQL üzerinden kullanıcının tüm depolarının dilleri ve boyutlarıyla birlikte çekilmesi
-        $allReposQuery = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner isPrivate pushedAt defaultBranchRef { target { ... on Commit { history { totalCount } } } } languages(first: 10, orderBy: {field: SIZE, direction: DESC}) { totalSize edges { size node { name color } } } } } } }"}';
+        $allReposQuery = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner isPrivate pushedAt defaultBranchRef { target { ... on Commit { history { totalCount } } } } languages(first: 5) { totalSize edges { size node { name color } } } } } } }"}';
 
         $chAllRepos = curl_init();
         curl_setopt($chAllRepos, CURLOPT_URL, "https://api.github.com/graphql");
         curl_setopt($chAllRepos, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($chAllRepos, CURLOPT_POST, true);
         curl_setopt($chAllRepos, CURLOPT_POSTFIELDS, $allReposQuery);
+        curl_setopt($chAllRepos, CURLOPT_TIMEOUT, 30);
         curl_setopt($chAllRepos, CURLOPT_HTTPHEADER, [
             "User-Agent: PHP-GitActivityDashboard",
             "Authorization: bearer " . GITHUB_TOKEN,
@@ -591,6 +592,14 @@ if ($httpcode === 200) {
 
         $allReposResp = curl_exec($chAllRepos);
         $allReposData = json_decode($allReposResp, true);
+
+        // Eğer ilk denemede timeout olduysa veya veri gelmediyse 50 repo ile tekrar dene
+        if (!isset($allReposData['data']['user']['repositories']['nodes'])) {
+            $fallbackQuery = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { repositories(first: 60, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner isPrivate pushedAt defaultBranchRef { target { ... on Commit { history { totalCount } } } } languages(first: 3) { totalSize edges { size node { name color } } } } } } }"}';
+            curl_setopt($chAllRepos, CURLOPT_POSTFIELDS, $fallbackQuery);
+            $allReposResp = curl_exec($chAllRepos);
+            $allReposData = json_decode($allReposResp, true);
+        }
 
         $allProjectsList = [];
         $totalAllTimeTokens = 0;
