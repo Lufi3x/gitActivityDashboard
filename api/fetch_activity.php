@@ -430,6 +430,8 @@ if ($httpcode === 200) {
         $pTokens = $baseTokens + $reasoningTokens;
         $totalProjectTokens += $pTokens;
 
+        $pCodeLines = max(10, $pData['additions'] - $pData['deletions']);
+
         $projectStatsList[] = [
             'name' => $pData['name'],
             'short_name' => ucfirst($pData['short_name']),
@@ -437,6 +439,10 @@ if ($httpcode === 200) {
             'additions' => $pData['additions'],
             'deletions' => $pData['deletions'],
             'changed_files' => $pData['changed_files'],
+            'code_lines' => $pCodeLines,
+            'formatted_code_lines' => number_format($pCodeLines, 0, ',', '.'),
+            'primary_language' => 'Kod',
+            'primary_language_color' => '#ffd700',
             'base_tokens' => $baseTokens,
             'reasoning_tokens' => $reasoningTokens,
             'estimated_tokens' => $pTokens,
@@ -461,12 +467,14 @@ if ($httpcode === 200) {
 
     if (file_exists($allTimeCacheFile) && (time() - filemtime($allTimeCacheFile)) < $allTimeCacheDuration) {
         $cachedAllTime = json_decode(file_get_contents($allTimeCacheFile), true);
-        if (is_array($cachedAllTime) && !empty($cachedAllTime['project_stats'])) {
+        // Eğer önbellek geçerliyse ve yeni eklenen 'code_lines' alanı mevcutsa önbellekten yükle
+        if (is_array($cachedAllTime) && !empty($cachedAllTime['project_stats']) && isset($cachedAllTime['project_stats'][0]['code_lines'])) {
             $allTimeProjectStats = $cachedAllTime;
 
             // Ön bellek süresi boyunca yeni commit atılırsa ön bellekteki verileri dinamik güncelle
             $updatedProjectStats = [];
             $totalAllTimeTokens = 0;
+            $totalAllTimeCodeLines = 0;
 
             foreach ($allTimeProjectStats['project_stats'] as $pItem) {
                 $rFullName = $pItem['name'];
@@ -518,6 +526,13 @@ if ($httpcode === 200) {
                         $pItem['changed_files'] += $deltaFiles;
                         $pItem['session_minutes'] += $deltaSessionMins;
 
+                        // Yeni satır değişimini kod satırına yansıt
+                        $netLineChange = $deltaAdditions - $deltaDeletions;
+                        if (isset($pItem['code_lines'])) {
+                            $pItem['code_lines'] = max(10, $pItem['code_lines'] + $netLineChange);
+                            $pItem['formatted_code_lines'] = number_format($pItem['code_lines'], 0, ',', '.');
+                        }
+
                         $pItem['recent_commits'] = $currentRecentCommits;
                         $pItem['recent_additions'] = $currentRecentAdditions;
                         $pItem['recent_deletions'] = $currentRecentDeletions;
@@ -541,6 +556,7 @@ if ($httpcode === 200) {
                     }
                 }
                 $totalAllTimeTokens += $pItem['estimated_tokens'];
+                $totalAllTimeCodeLines += ($pItem['code_lines'] ?? 0);
                 $updatedProjectStats[] = $pItem;
             }
 
@@ -551,12 +567,14 @@ if ($httpcode === 200) {
             $allTimeProjectStats['project_stats'] = $updatedProjectStats;
             $allTimeProjectStats['total_estimated_tokens'] = $totalAllTimeTokens;
             $allTimeProjectStats['total_estimated_tokens_formatted'] = number_format($totalAllTimeTokens, 0, ',', '.');
+            $allTimeProjectStats['total_code_lines'] = $totalAllTimeCodeLines;
+            $allTimeProjectStats['total_code_lines_formatted'] = number_format($totalAllTimeCodeLines, 0, ',', '.');
         }
     }
 
     if (empty($allTimeProjectStats)) {
-        // GraphQL üzerinden kullanıcının tüm depolarının çekilmesi
-        $allReposQuery = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner isPrivate pushedAt defaultBranchRef { target { ... on Commit { history { totalCount } } } } } } } }"}';
+        // GraphQL üzerinden kullanıcının tüm depolarının dilleri ve boyutlarıyla birlikte çekilmesi
+        $allReposQuery = '{"query": "query { user(login: \"' . GITHUB_USERNAME . '\") { repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: [OWNER, COLLABORATOR]) { nodes { name nameWithOwner isPrivate pushedAt defaultBranchRef { target { ... on Commit { history { totalCount } } } } languages(first: 10, orderBy: {field: SIZE, direction: DESC}) { totalSize edges { size node { name color } } } } } } }"}';
 
         $chAllRepos = curl_init();
         curl_setopt($chAllRepos, CURLOPT_URL, "https://api.github.com/graphql");
@@ -574,6 +592,7 @@ if ($httpcode === 200) {
 
         $allProjectsList = [];
         $totalAllTimeTokens = 0;
+        $totalAllTimeCodeLines = 0;
 
         if (isset($allReposData['data']['user']['repositories']['nodes'])) {
             $nodes = $allReposData['data']['user']['repositories']['nodes'];
@@ -640,6 +659,39 @@ if ($httpcode === 200) {
                 $pTokens = $baseTokens + $reasoningTokens;
                 $totalAllTimeTokens += $pTokens;
 
+                // --- Dil ve Kaynak Kod Satır Sayısı (LOC - Lines of Code) Analizi ---
+                $totalCodeBytes = isset($node['languages']['totalSize']) ? (int)$node['languages']['totalSize'] : 0;
+                $primaryLanguage = 'Kod';
+                $primaryLanguageColor = '#ffd700';
+                $languageList = [];
+
+                if (isset($node['languages']['edges']) && is_array($node['languages']['edges'])) {
+                    foreach ($node['languages']['edges'] as $lEdge) {
+                        $lName = $lEdge['node']['name'] ?? '';
+                        $lSize = $lEdge['size'] ?? 0;
+                        $lColor = $lEdge['node']['color'] ?? '#ffd700';
+                        if ($lName && $lSize > 0) {
+                            $languageList[] = [
+                                'name' => $lName,
+                                'size' => $lSize,
+                                'color' => $lColor
+                            ];
+                        }
+                    }
+                    if (!empty($languageList)) {
+                        $primaryLanguage = $languageList[0]['name'];
+                        $primaryLanguageColor = $languageList[0]['color'];
+                    }
+                }
+
+                // Ortalama 1 kod satırı ~35 bayttır (Linguist sadece kod dosyalarını sayar)
+                if ($totalCodeBytes > 0) {
+                    $codeLines = (int)round($totalCodeBytes / 35);
+                } else {
+                    $codeLines = max(10, $additions - $deletions);
+                }
+                $totalAllTimeCodeLines += $codeLines;
+
                 $allProjectsList[] = [
                     'name' => $rFullName,
                     'short_name' => $rShortName,
@@ -647,6 +699,12 @@ if ($httpcode === 200) {
                     'additions' => $additions,
                     'deletions' => $deletions,
                     'changed_files' => $changedFiles,
+                    'code_bytes' => $totalCodeBytes,
+                    'code_lines' => $codeLines,
+                    'formatted_code_lines' => number_format($codeLines, 0, ',', '.'),
+                    'primary_language' => $primaryLanguage,
+                    'primary_language_color' => $primaryLanguageColor,
+                    'languages' => $languageList,
                     'recent_commits' => $recentCommits,
                     'recent_additions' => $recentAdditions,
                     'recent_deletions' => $recentDeletions,
@@ -672,12 +730,18 @@ if ($httpcode === 200) {
         if (empty($allProjectsList)) {
             $allProjectsList = $projectStatsList;
             $totalAllTimeTokens = $totalProjectTokens;
+            $totalAllTimeCodeLines = 0;
+            foreach ($allProjectsList as $p) {
+                $totalAllTimeCodeLines += ($p['code_lines'] ?? 0);
+            }
         }
 
         $allTimeProjectStats = [
             'project_stats' => $allProjectsList,
             'total_estimated_tokens' => $totalAllTimeTokens,
             'total_estimated_tokens_formatted' => number_format($totalAllTimeTokens, 0, ',', '.'),
+            'total_code_lines' => $totalAllTimeCodeLines,
+            'total_code_lines_formatted' => number_format($totalAllTimeCodeLines, 0, ',', '.'),
             'cached_at' => date('H:i - d.m.Y'),
             'cache_expires_minutes' => round($allTimeCacheDuration / 60)
         ];
@@ -689,6 +753,8 @@ if ($httpcode === 200) {
     $stats['all_time_project_stats'] = $allTimeProjectStats['project_stats'];
     $stats['total_estimated_tokens'] = $allTimeProjectStats['total_estimated_tokens'];
     $stats['total_estimated_tokens_formatted'] = $allTimeProjectStats['total_estimated_tokens_formatted'];
+    $stats['total_code_lines'] = $allTimeProjectStats['total_code_lines'] ?? 0;
+    $stats['total_code_lines_formatted'] = $allTimeProjectStats['total_code_lines_formatted'] ?? '0';
     $stats['all_time_cache_info'] = [
         'cached_at' => $allTimeProjectStats['cached_at'] ?? null,
         'cache_expires_minutes' => $allTimeProjectStats['cache_expires_minutes'] ?? 120

@@ -535,28 +535,46 @@ function renderProjectAnalyticsTable(projects) {
     if (!tableBody) return;
 
     if (!projects || projects.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">Proje analitik verisi bulunamadı.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">Proje analitik verisi bulunamadı.</td></tr>`;
         return;
     }
 
     let totalTokensSum = 0;
     let totalHumanMinsSum = 0;
     let totalPushMinsSum = 0;
+    let totalCodeLinesSum = 0;
 
     let rowsHtml = '';
     projects.forEach(p => {
         totalTokensSum += (p.estimated_tokens || 0);
         totalHumanMinsSum += (p.lines_minutes || 0);
         totalPushMinsSum += (p.session_minutes || 0);
+        totalCodeLinesSum += (p.code_lines || 0);
 
         const formattedTokens = p.formatted_tokens || (p.estimated_tokens ? p.estimated_tokens.toLocaleString('tr-TR') : '0');
+        const formattedCodeLines = p.formatted_code_lines || (p.code_lines ? p.code_lines.toLocaleString('tr-TR') : '0');
         const changeStr = `+${p.additions.toLocaleString('tr-TR')} / -${p.deletions.toLocaleString('tr-TR')}`;
+
+        const langColor = p.primary_language_color || '#ffd700';
+        const langBadge = p.primary_language ? `<span class="lang-tag" style="border-color: ${langColor}77; color: ${langColor}; background: ${langColor}18;">${p.primary_language}</span>` : '';
 
         rowsHtml += `
             <tr>
-                <td><strong>${p.short_name}</strong> <br><small style="color: var(--text-muted); font-size:0.75rem;">${p.name}</small></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <strong>${p.short_name}</strong>
+                        ${langBadge}
+                    </div>
+                    <small style="color: var(--text-muted); font-size:0.75rem;">${p.name}</small>
+                </td>
                 <td style="text-align:center;"><span class="badge" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">${p.commits} Commit</span></td>
-                <td style="text-align:center; color: var(--text-muted);">${changeStr}</td>
+                <td style="text-align:center;">
+                    <button type="button" class="loc-badge-btn" onclick="setSimulatorLines(${p.code_lines || 0}, '${p.short_name}')" title="Bu projenin satır sayısını canlı simülatöre aktar">
+                        <i class="fa-solid fa-code"></i> ${formattedCodeLines} Satır
+                        <i class="fa-solid fa-calculator" style="font-size: 0.7rem; opacity: 0.6; margin-left: 3px;"></i>
+                    </button>
+                </td>
+                <td style="text-align:center; color: var(--text-muted); font-size:0.85rem;">${changeStr}</td>
                 <td style="text-align:center; font-weight:bold; color: #00aa00;">${p.work_time_lines}</td>
                 <td style="text-align:center; font-weight:bold; color: var(--danger-red);">${p.work_time_session}</td>
                 <td style="text-align:right;"><span class="token-badge">${formattedTokens} Token</span></td>
@@ -571,6 +589,11 @@ function renderProjectAnalyticsTable(projects) {
         document.getElementById('statTotalTokens').textContent = totalTokensSum > 1000000 
             ? (totalTokensSum / 1000000).toFixed(2) + 'M' 
             : totalTokensSum.toLocaleString('tr-TR');
+    }
+    if (document.getElementById('statTotalCodeLines')) {
+        document.getElementById('statTotalCodeLines').textContent = totalCodeLinesSum > 1000000
+            ? (totalCodeLinesSum / 1000000).toFixed(2) + 'M'
+            : totalCodeLinesSum.toLocaleString('tr-TR');
     }
     if (document.getElementById('statTotalHumanTime')) {
         const h = Math.floor(totalHumanMinsSum / 60);
@@ -615,5 +638,19 @@ function initTokenSimulator() {
     ratioSelect.addEventListener('change', calculateSim);
     calculateSim();
 }
+
+window.setSimulatorLines = function(lines, projectName) {
+    const lineInput = document.getElementById('simLineInput');
+    if (!lineInput) return;
+    lineInput.value = lines;
+    lineInput.dispatchEvent(new Event('input'));
+
+    const simBox = document.querySelector('.token-simulator-box');
+    if (simBox) {
+        simBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        simBox.classList.add('sim-pulse-highlight');
+        setTimeout(() => simBox.classList.remove('sim-pulse-highlight'), 1600);
+    }
+};
 
 

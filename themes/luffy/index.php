@@ -361,12 +361,19 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                     <div style="padding: 20px;">
                         
                         <!-- Özet Kartları -->
-                        <div class="parchment-cards" style="margin-bottom: 20px;">
+                        <div class="parchment-cards token-parchment-cards" style="margin-bottom: 20px;">
                             <div class="parchment-card">
                                 <div class="card-inner">
                                     <h4 class="card-title"><i class="fa-solid fa-microchip"></i> HARCANAN TOKEN</h4>
                                     <div class="card-value" id="statTotalTokens" style="font-size: 2.8rem;">0</div>
                                     <div class="card-desc">- TÜM PROJELER TOPLAMI -</div>
+                                </div>
+                            </div>
+                            <div class="parchment-card">
+                                <div class="card-inner">
+                                    <h4 class="card-title"><i class="fa-solid fa-code"></i> KOD SATIRI (LOC)</h4>
+                                    <div class="card-value" id="statTotalCodeLines" style="font-size: 2.8rem; color: #ffd700;">0</div>
+                                    <div class="card-desc">- TOPLAM KOD HACMİ -</div>
                                 </div>
                             </div>
                             <div class="parchment-card center-card">
@@ -395,6 +402,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                                     <tr>
                                         <th>PROJE ADI</th>
                                         <th style="text-align:center;">COMMİT</th>
+                                        <th style="text-align:center;">KOD SATIRI (LOC)</th>
                                         <th style="text-align:center;">DEĞİŞTİRİLEN SATIR</th>
                                         <th style="text-align:center;">İNSAN SÜRESİ</th>
                                         <th style="text-align:center;">PUSH SÜRESİ</th>
@@ -403,7 +411,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                                 </thead>
                                 <tbody id="projectAnalyticsTableBody">
                                     <tr>
-                                        <td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">
+                                        <td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">
                                             Veriler yükleniyor...
                                         </td>
                                     </tr>

@@ -1586,6 +1586,75 @@ body {
     font-weight: bold;
 }
 
+.token-parchment-cards {
+    grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 992px) {
+    .token-parchment-cards {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .token-parchment-cards {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.lang-tag {
+    font-size: 0.68rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border: 1px solid;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    font-family: 'Roboto Condensed', sans-serif;
+    display: inline-block;
+}
+
+.loc-badge-btn {
+    background: rgba(255, 215, 0, 0.1);
+    color: #ffd700;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.loc-badge-btn:hover {
+    background: rgba(255, 215, 0, 0.25);
+    border-color: #ffd700;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.sim-pulse-highlight {
+    animation: simPulse 1.5s ease-out;
+}
+
+@keyframes simPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        border-color: #ffd700;
+    }
+    50% {
+        box-shadow: 0 0 20px 4px rgba(255, 215, 0, 0.5);
+        border-color: #ffd700;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+        border-color: var(--panel-border);
+    }
+}
+
 .token-simulator-box {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid var(--panel-border);
