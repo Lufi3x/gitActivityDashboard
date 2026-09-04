@@ -55,7 +55,10 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                         </div>
                     </div>
                     <div class="status-bottom">
-                        VERİLER CANLI OLARAK GÜNCELLENİYOR <span class="red-dot"></span>
+                        <span>VERİLER CANLI OLARAK GÜNCELLENİYOR <span class="red-dot"></span></span>
+                        <button type="button" class="header-cache-btn" onclick="triggerClearCache(this)" title="Önbelleği temizle ve en güncel verileri yükle">
+                            <i class="fa-solid fa-arrows-rotate"></i> ÖNBELLEĞİ TEMİZLE
+                        </button>
                     </div>
                 </div>
             </div>
@@ -356,7 +359,12 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                 <section class="luffy-panel token-calc-panel" id="tokensSection" style="display: none;">
                     <h3 class="panel-header" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <span><i class="fa-solid fa-calculator"></i> TOKEN & PROJE ANALİZİ</span>
-                        <span id="tokenCacheInfoBadge" style="font-size: 0.75rem; color: #ffd700; letter-spacing: 1px;">TÜM ZAMANLAR PROJE & TOKEN METRİKLERİ</span>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span id="tokenCacheInfoBadge" style="font-size: 0.75rem; color: #ffd700; letter-spacing: 1px;">TÜM ZAMANLAR PROJE & TOKEN METRİKLERİ</span>
+                            <button type="button" class="btn-clear-cache" onclick="triggerClearCache(this)" title="Önbelleği temizle ve GitHub'dan en güncel verileri çek">
+                                <i class="fa-solid fa-arrows-rotate"></i> ÖNBELLEĞİ TEMİZLE
+                            </button>
+                        </div>
                     </h3>
                     <div style="padding: 20px;">
                         
@@ -469,6 +477,19 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                             <p style="margin-bottom: 8px;"><strong>Aktif Tema:</strong> <span style="color: var(--danger-red);">Luffy (Korsan Kralı)</span></p>
                             <p style="margin-bottom: 8px;"><strong>Veri Kaynağı:</strong> GitHub REST & GraphQL API</p>
                             <p><strong>Durum:</strong> Tayfa hazır, yelkenler fora!</p>
+                        </div>
+
+                        <!-- Önbellek Yönetimi -->
+                        <div style="margin-top: 20px; background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 5px; border: 1px solid var(--panel-border);">
+                            <h4 style="color: #ffd700; margin-bottom: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-database"></i> SİSTEM ÖNBELLEĞİ (CACHE) YÖNETİMİ
+                            </h4>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; line-height: 1.5;">
+                                GitHub API yanıtları, token ve kaynak kod satırı hesaplamaları sistem hızını korumak için önbellekte tutulur. Yeni bir commit attıysanız veya değerleri GitHub'dan anlık olarak tazelemek istiyorsanız aşağıdaki butonu kullanabilirsiniz.
+                            </p>
+                            <button type="button" class="btn-clear-cache full-btn" onclick="triggerClearCache(this)">
+                                <i class="fa-solid fa-arrows-rotate"></i> TÜM ÖNBELLEĞİ TEMİZLE VE VERİLERİ YENİDEN HESAPLA
+                            </button>
                         </div>
                     </div>
                 </section>

@@ -1725,3 +1725,72 @@ body {
     font-size: 1.1rem;
     font-family: 'Roboto Condensed', sans-serif;
 }
+
+/* ================= ÖNBELLEK (CACHE) TEMİZLEME BUTONLARI ================= */
+.header-cache-btn {
+    background: rgba(230, 46, 46, 0.15);
+    border: 1px solid rgba(230, 46, 46, 0.5);
+    color: var(--danger-red);
+    font-size: 0.72rem;
+    font-weight: bold;
+    font-family: 'Roboto Condensed', sans-serif;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+}
+
+.header-cache-btn:hover {
+    background: var(--danger-red);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(230, 46, 46, 0.5);
+}
+
+.header-cache-btn:disabled,
+.btn-clear-cache:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-clear-cache {
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    color: #ffd700;
+    font-size: 0.75rem;
+    font-weight: bold;
+    font-family: 'Roboto Condensed', sans-serif;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-clear-cache:hover {
+    background: rgba(255, 215, 0, 0.25);
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-clear-cache.full-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    background: rgba(230, 46, 46, 0.15);
+    border: 1px solid var(--danger-red);
+    color: var(--text-primary);
+}
+
+.btn-clear-cache.full-btn:hover {
+    background: var(--danger-red);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(230, 46, 46, 0.6);
+}

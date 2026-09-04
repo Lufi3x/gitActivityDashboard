@@ -10,11 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
 });
 
-async function fetchActivity() {
+async function fetchActivity(forceRefresh = false) {
     const timelineContainer = document.getElementById('activityTimeline');
 
     try {
-        const response = await fetch('api/fetch_activity.php');
+        const url = forceRefresh ? 'api/fetch_activity.php?force_refresh=1' : 'api/fetch_activity.php';
+        const response = await fetch(url);
         const result = await response.json();
 
         timelineContainer.innerHTML = ''; // Temizle.
@@ -650,6 +651,64 @@ window.setSimulatorLines = function(lines, projectName) {
         simBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         simBox.classList.add('sim-pulse-highlight');
         setTimeout(() => simBox.classList.remove('sim-pulse-highlight'), 1600);
+    }
+};
+
+window.triggerClearCache = async function(btn) {
+    const allCacheBtns = document.querySelectorAll('.btn-clear-cache, .header-cache-btn');
+    
+    allCacheBtns.forEach(b => {
+        b.disabled = true;
+        b.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> TEMİZLENİYOR...';
+    });
+
+    try {
+        // 1. Önbellek dosyalarını temizle
+        await fetch('api/clear_cache.php');
+        
+        // 2. Verileri doğrudan GitHub API üzerinden taze olarak yeniden çek
+        await fetchActivity(true);
+
+        allCacheBtns.forEach(b => {
+            b.innerHTML = '<i class="fa-solid fa-check"></i> GÜNCELLENDİ!';
+            b.style.borderColor = '#00aa00';
+            b.style.color = '#00aa00';
+        });
+
+        setTimeout(() => {
+            allCacheBtns.forEach(b => {
+                b.disabled = false;
+                b.style.borderColor = '';
+                b.style.color = '';
+            });
+            const headerBtn = document.querySelector('.header-cache-btn');
+            if (headerBtn) headerBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ÖNBELLEĞİ TEMİZLE';
+            const tokenBtn = document.querySelector('.btn-clear-cache:not(.full-btn)');
+            if (tokenBtn) tokenBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ÖNBELLEĞİ TEMİZLE';
+            const fullBtn = document.querySelector('.btn-clear-cache.full-btn');
+            if (fullBtn) fullBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> TÜM ÖNBELLEĞİ TEMİZLE VE VERİLERİ YENİDEN HESAPLA';
+        }, 2000);
+
+    } catch (e) {
+        console.error('Önbellek temizleme hatası:', e);
+        allCacheBtns.forEach(b => {
+            b.disabled = false;
+            b.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> HATA!';
+            b.style.borderColor = 'var(--danger-red)';
+            b.style.color = 'var(--danger-red)';
+        });
+        setTimeout(() => {
+            allCacheBtns.forEach(b => {
+                b.style.borderColor = '';
+                b.style.color = '';
+            });
+            const headerBtn = document.querySelector('.header-cache-btn');
+            if (headerBtn) headerBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ÖNBELLEĞİ TEMİZLE';
+            const tokenBtn = document.querySelector('.btn-clear-cache:not(.full-btn)');
+            if (tokenBtn) tokenBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> ÖNBELLEĞİ TEMİZLE';
+            const fullBtn = document.querySelector('.btn-clear-cache.full-btn');
+            if (fullBtn) fullBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> TÜM ÖNBELLEĞİ TEMİZLE VE VERİLERİ YENİDEN HESAPLA';
+        }, 2500);
     }
 };
 

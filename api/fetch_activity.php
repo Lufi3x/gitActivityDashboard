@@ -8,9 +8,17 @@ if (empty(GITHUB_TOKEN)) {
 
 $cacheFile = 'cache.json';
 $cacheTime = CACHE_DURATION_MINUTES * 60; // Dakikayı saniyeye çevir
+$forceRefresh = isset($_GET['force_refresh']) || isset($_GET['clear_cache']);
+
+// Eğer zorla yenileme isteniyorsa cache dosyalarını temizle
+if ($forceRefresh) {
+    if (file_exists($cacheFile)) { @unlink($cacheFile); }
+    $allTimeCacheTmp = __DIR__ . '/all_time_projects_cache.json';
+    if (file_exists($allTimeCacheTmp)) { @unlink($allTimeCacheTmp); }
+}
 
 // Cache kontrolü
-if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
+if (!$forceRefresh && file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     echo file_get_contents($cacheFile);
     exit;
 }
