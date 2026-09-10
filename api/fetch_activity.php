@@ -916,13 +916,28 @@ if ($httpcode === 200) {
             }
 
             // GraphQL üzerinden son pushlanan repoları kontrol edip aktif modüllere ekle ve gerçek diff verilerini çek
-            $extraAdditions = 0;
-            $extraDeletions = 0;
-            $extraFiles = 0;
+            $extraAdditionsToday = 0;
+            $extraDeletionsToday = 0;
+            $extraFilesToday = 0;
+            
+            $extraAdditionsYesterday = 0;
+            $extraDeletionsYesterday = 0;
+            $extraFilesYesterday = 0;
+
+            $extraAdditionsLast24h = 0;
+            $extraDeletionsLast24h = 0;
+            $extraFilesLast24h = 0;
+
             $todayAllTimestamps = $periods['today']['timestamps'] ?? [];
+            $yesterdayAllTimestamps = $periods['yesterday']['timestamps'] ?? [];
+            $last24hAllTimestamps = $periods['last_24h']['timestamps'] ?? [];
 
             if (isset($graphData['data']['user']['repositories']['nodes'])) {
                 $recentPushedNodes = $graphData['data']['user']['repositories']['nodes'];
+                $yesterdayStartTs = strtotime($yesterdayDate . ' 00:00:00');
+                $sinceGlobalTs = min($twentyFourHoursAgo, $yesterdayStartTs);
+                $sinceGlobalIso = gmdate('Y-m-d\TH:i:s\Z', $sinceGlobalTs);
+
                 foreach ($recentPushedNodes as $pNode) {
                     if (!empty($pNode['pushedAt'])) {
                         $pushedTs = strtotime($pNode['pushedAt']);
@@ -930,14 +945,23 @@ if ($httpcode === 200) {
                         $rName = ucfirst($pNode['name']);
                         $rFullName = $pNode['nameWithOwner'] ?? (GITHUB_USERNAME . '/' . $pNode['name']);
 
-                        if ($pushedDate === $todayDate) {
-                            if (!in_array($rName, $stats['today']['active_projects'])) {
-                                $stats['today']['active_projects'][] = $rName;
-                            }
+                        $isRepoToday = ($pushedDate === $todayDate);
+                        $isRepoYesterday = ($pushedDate === $yesterdayDate);
+                        $isRepo24h = ($pushedTs >= $twentyFourHoursAgo);
 
-                            // Bu reponun bugünkü commitlerini çek
-                            $sinceToday = date('Y-m-d\T00:00:00\Z', strtotime('today'));
-                            $cUrl = "https://api.github.com/repos/{$rFullName}/commits?since={$sinceToday}&per_page=100";
+                        if ($isRepoToday && !in_array($rName, $stats['today']['active_projects'])) {
+                            $stats['today']['active_projects'][] = $rName;
+                        }
+                        if ($isRepoYesterday && !in_array($rName, $stats['yesterday']['active_projects'])) {
+                            $stats['yesterday']['active_projects'][] = $rName;
+                        }
+                        if ($isRepo24h && !in_array($rName, $stats['last_24h']['active_projects'])) {
+                            $stats['last_24h']['active_projects'][] = $rName;
+                        }
+
+                        // Eğer repo son 24 saat, dün veya bugün içinde hareket gördüyse commitlerini çek
+                        if ($isRepoToday || $isRepoYesterday || $isRepo24h) {
+                            $cUrl = "https://api.github.com/repos/{$rFullName}/commits?since={$sinceGlobalIso}&per_page=100";
                             $chCommits = curl_init();
                             curl_setopt($chCommits, CURLOPT_URL, $cUrl);
                             curl_setopt($chCommits, CURLOPT_RETURNTRANSFER, true);
@@ -950,13 +974,32 @@ if ($httpcode === 200) {
                             if (curl_getinfo($chCommits, CURLINFO_HTTP_CODE) === 200) {
                                 $cList = json_decode($cResp, true);
                                 if (is_array($cList) && count($cList) > 0) {
+                                    $repoTodayCommits = [];
+                                    $repoYesterdayCommits = [];
+                                    $repo24hCommits = [];
+
                                     foreach ($cList as $cItem) {
                                         $cDateStr = $cItem['commit']['author']['date'] ?? ($cItem['commit']['committer']['date'] ?? null);
                                         if ($cDateStr) {
-                                            $todayAllTimestamps[] = strtotime($cDateStr);
+                                            $cTs = strtotime($cDateStr);
+                                            $cDate = date('Y-m-d', $cTs);
+
+                                            if ($cDate === $todayDate) {
+                                                $todayAllTimestamps[] = $cTs;
+                                                $repoTodayCommits[] = $cItem;
+                                            }
+                                            if ($cDate === $yesterdayDate) {
+                                                $yesterdayAllTimestamps[] = $cTs;
+                                                $repoYesterdayCommits[] = $cItem;
+                                            }
+                                            if ($cTs >= $twentyFourHoursAgo) {
+                                                $last24hAllTimestamps[] = $cTs;
+                                                $repo24hCommits[] = $cItem;
+                                            }
                                         }
                                     }
 
+                                    // Repo diff'lerini çek (compare)
                                     $headSha = $cList[0]['sha'];
                                     $oldestSha = end($cList);
                                     $beforeSha = $oldestSha['parents'][0]['sha'] ?? $oldestSha['sha'];
@@ -974,24 +1017,32 @@ if ($httpcode === 200) {
                                     if (curl_getinfo($chComp, CURLINFO_HTTP_CODE) === 200) {
                                         $compData = json_decode($compRes, true);
                                         if (isset($compData['files']) && is_array($compData['files'])) {
-                                            $extraFiles += count($compData['files']);
+                                            $cFilesCount = count($compData['files']);
+                                            $cAdds = 0;
+                                            $cDels = 0;
                                             foreach ($compData['files'] as $file) {
-                                                $extraAdditions += $file['additions'] ?? 0;
-                                                $extraDeletions += $file['deletions'] ?? 0;
+                                                $cAdds += $file['additions'] ?? 0;
+                                                $cDels += $file['deletions'] ?? 0;
+                                            }
+
+                                            if (count($repoTodayCommits) > 0) {
+                                                $extraFilesToday += $cFilesCount;
+                                                $extraAdditionsToday += $cAdds;
+                                                $extraDeletionsToday += $cDels;
+                                            }
+                                            if (count($repoYesterdayCommits) > 0) {
+                                                $extraFilesYesterday += $cFilesCount;
+                                                $extraAdditionsYesterday += $cAdds;
+                                                $extraDeletionsYesterday += $cDels;
+                                            }
+                                            if (count($repo24hCommits) > 0) {
+                                                $extraFilesLast24h += $cFilesCount;
+                                                $extraAdditionsLast24h += $cAdds;
+                                                $extraDeletionsLast24h += $cDels;
                                             }
                                         }
                                     }
                                 }
-                            }
-                        }
-                        if ($pushedDate === $yesterdayDate) {
-                            if (!in_array($rName, $stats['yesterday']['active_projects'])) {
-                                $stats['yesterday']['active_projects'][] = $rName;
-                            }
-                        }
-                        if ($pushedTs >= $twentyFourHoursAgo) {
-                            if (!in_array($rName, $stats['last_24h']['active_projects'])) {
-                                $stats['last_24h']['active_projects'][] = $rName;
                             }
                         }
                     }
@@ -1003,37 +1054,63 @@ if ($httpcode === 200) {
                 $stats['active_projects'] = $stats['today']['active_projects'];
             }
 
-            if ($extraFiles > $stats['today']['changed_files']) {
-                $stats['today']['changed_files'] = $extraFiles;
-                $stats['changed_files'] = $extraFiles;
+            // Diff istatistiklerini güncelle (Today)
+            if ($extraFilesToday > $stats['today']['changed_files']) {
+                $stats['today']['changed_files'] = $extraFilesToday;
+                $stats['changed_files'] = $extraFilesToday;
             }
-            if ($extraAdditions > $stats['today']['additions']) {
-                $stats['today']['additions'] = $extraAdditions;
-                $stats['additions'] = $extraAdditions;
+            if ($extraAdditionsToday > $stats['today']['additions']) {
+                $stats['today']['additions'] = $extraAdditionsToday;
+                $stats['additions'] = $extraAdditionsToday;
             }
-            if ($extraDeletions > $stats['today']['deletions']) {
-                $stats['today']['deletions'] = $extraDeletions;
-                $stats['deletions'] = $extraDeletions;
+            if ($extraDeletionsToday > $stats['today']['deletions']) {
+                $stats['today']['deletions'] = $extraDeletionsToday;
+                $stats['deletions'] = $extraDeletionsToday;
             }
 
-            // 24 Saatlik istatistikleri de senkronize et (Bugün tamamen son 24 saatin içindedir)
+            // Diff istatistiklerini güncelle (Yesterday)
+            if ($extraFilesYesterday > $stats['yesterday']['changed_files']) {
+                $stats['yesterday']['changed_files'] = $extraFilesYesterday;
+            }
+            if ($extraAdditionsYesterday > $stats['yesterday']['additions']) {
+                $stats['yesterday']['additions'] = $extraAdditionsYesterday;
+            }
+            if ($extraDeletionsYesterday > $stats['yesterday']['deletions']) {
+                $stats['yesterday']['deletions'] = $extraDeletionsYesterday;
+            }
+
+            // Diff istatistiklerini güncelle (Last 24h)
+            if ($extraFilesLast24h > $stats['last_24h']['changed_files']) {
+                $stats['last_24h']['changed_files'] = $extraFilesLast24h;
+            }
+            if ($extraAdditionsLast24h > $stats['last_24h']['additions']) {
+                $stats['last_24h']['additions'] = $extraAdditionsLast24h;
+            }
+            if ($extraDeletionsLast24h > $stats['last_24h']['deletions']) {
+                $stats['last_24h']['deletions'] = $extraDeletionsLast24h;
+            }
+
+            // 24 Saatlik istatistikleri senkronize et (Bugün tamamen son 24 saatin içindedir)
             $stats['last_24h']['commits'] = max($stats['last_24h']['commits'], $stats['today']['commits']);
             $stats['last_24h']['changed_files'] = max($stats['last_24h']['changed_files'], $stats['today']['changed_files']);
             $stats['last_24h']['additions'] = max($stats['last_24h']['additions'], $stats['today']['additions']);
             $stats['last_24h']['deletions'] = max($stats['last_24h']['deletions'], $stats['today']['deletions']);
             $stats['last_24h']['repos'] = max($stats['last_24h']['repos'], $stats['today']['repos']);
 
-            // Gerçek zaman damgalarına göre süreyi yeniden hesapla
-            if (count($todayAllTimestamps) > 1) {
-                sort($todayAllTimestamps);
-                $sessionStart = null;
-                $lastTime = null;
-                $maxGap = 3 * 3600;
+            // Çalışma süresi hesaplama fonksiyonu (Tüm oturumlar için ortak mantık)
+            $calcSessionDuration = function(array $timestamps) {
+                if (empty($timestamps)) return 0;
+                $tsList = array_values(array_unique($timestamps));
+                sort($tsList);
+                
+                $maxGap = 3 * 3600; 
                 $minSessionMinutes = 45;
                 $postSessionBuffer = 30;
-                $calcMins = 0;
+                $totalMins = 0;
+                $sessionStart = null;
+                $lastTime = null;
 
-                foreach ($todayAllTimestamps as $time) {
+                foreach ($tsList as $time) {
                     if ($lastTime === null) {
                         $sessionStart = $time;
                         $lastTime = $time;
@@ -1041,86 +1118,93 @@ if ($httpcode === 200) {
                         $lastTime = $time;
                     } else {
                         $dur = ($lastTime - $sessionStart) / 60;
-                        $calcMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
+                        $totalMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
                         $sessionStart = $time;
                         $lastTime = $time;
                     }
                 }
                 if ($sessionStart !== null) {
                     $dur = ($lastTime - $sessionStart) / 60;
-                    $calcMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
+                    $totalMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
                 }
+                return round($totalMins);
+            };
 
-                $sessionMins = round($calcMins);
-                $totalChangedLines = $stats['today']['additions'] + round($stats['today']['deletions'] * 0.5);
-                $linesMins = round(($totalChangedLines / $linesPerHour) * 60);
-                $hybridMins = ($sessionMins > 0 && $linesMins > 0) ? round(($sessionMins + $linesMins) / 2) : max($sessionMins, $linesMins);
+            // --- 1. BUGÜN (TODAY) ÇALIŞMA SÜRESİ HESAPLAMASI ---
+            $todayAllTimestamps = array_unique($todayAllTimestamps);
+            if (count($todayAllTimestamps) > 0) {
+                $sessionMinsToday = $calcSessionDuration($todayAllTimestamps);
+                $totalChangedLinesToday = $stats['today']['additions'] + round($stats['today']['deletions'] * 0.5);
+                $linesMinsToday = round(($totalChangedLinesToday / $linesPerHour) * 60);
+                $hybridMinsToday = ($sessionMinsToday > 0 && $linesMinsToday > 0) ? round(($sessionMinsToday + $linesMinsToday) / 2) : max($sessionMinsToday, $linesMinsToday);
 
-                $stats['today']['work_time_session'] = $formatTime($sessionMins);
-                $stats['today']['work_time_lines'] = $formatTime($linesMins);
-                $stats['today']['work_time_hybrid'] = $formatTime($hybridMins);
+                $stats['today']['work_time_session'] = $formatTime($sessionMinsToday);
+                $stats['today']['work_time_lines'] = $formatTime($linesMinsToday);
+                $stats['today']['work_time_hybrid'] = $formatTime($hybridMinsToday);
+
+                if ($calcMode === 'lines') {
+                    $stats['today']['work_time'] = $stats['today']['work_time_lines'];
+                } elseif ($calcMode === 'hybrid') {
+                    $stats['today']['work_time'] = $stats['today']['work_time_hybrid'];
+                } else {
+                    $stats['today']['work_time'] = $stats['today']['work_time_session'];
+                }
+                $stats['work_time'] = $stats['today']['work_time'];
                 $stats['work_time_session'] = $stats['today']['work_time_session'];
                 $stats['work_time_lines'] = $stats['today']['work_time_lines'];
                 $stats['work_time_hybrid'] = $stats['today']['work_time_hybrid'];
+                $dailyWorkDurations[$todayDate] = $sessionMinsToday;
+            }
 
-                // last_24h çalışma süresini kendi timestamp'lerinden bağımsız hesapla
-                // (dünün ilgili saatleri + bugünün tüm saatleri dahil)
-                $last24hAllTimestamps = $periods['last_24h']['timestamps'] ?? [];
-                // Bugün için toplanan ekstra timestamp'leri de ekle (sadece son 24 saat içinde olanlar)
-                foreach ($todayAllTimestamps as $ts) {
-                    if ($ts >= $twentyFourHoursAgo) {
-                        $last24hAllTimestamps[] = $ts;
-                    }
-                }
-                $last24hAllTimestamps = array_unique($last24hAllTimestamps);
+            // --- 2. DÜN (YESTERDAY) ÇALIŞMA SÜRESİ HESAPLAMASI ---
+            $yesterdayAllTimestamps = array_unique($yesterdayAllTimestamps);
+            if (count($yesterdayAllTimestamps) > 0) {
+                $sessionMinsY = $calcSessionDuration($yesterdayAllTimestamps);
+                $totalChangedLinesY = $stats['yesterday']['additions'] + round($stats['yesterday']['deletions'] * 0.5);
+                $linesMinsY = round(($totalChangedLinesY / $linesPerHour) * 60);
+                $hybridMinsY = ($sessionMinsY > 0 && $linesMinsY > 0) ? round(($sessionMinsY + $linesMinsY) / 2) : max($sessionMinsY, $linesMinsY);
 
-                if (count($last24hAllTimestamps) > 1) {
-                    sort($last24hAllTimestamps);
-                    $l24SessionStart = null;
-                    $l24LastTime = null;
-                    $l24CalcMins = 0;
-
-                    foreach ($last24hAllTimestamps as $time) {
-                        if ($l24LastTime === null) {
-                            $l24SessionStart = $time;
-                            $l24LastTime = $time;
-                        } elseif (($time - $l24LastTime) <= $maxGap) {
-                            $l24LastTime = $time;
-                        } else {
-                            $dur = ($l24LastTime - $l24SessionStart) / 60;
-                            $l24CalcMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
-                            $l24SessionStart = $time;
-                            $l24LastTime = $time;
-                        }
-                    }
-                    if ($l24SessionStart !== null) {
-                        $dur = ($l24LastTime - $l24SessionStart) / 60;
-                        $l24CalcMins += ($dur < $minSessionMinutes) ? $minSessionMinutes : ($dur + $postSessionBuffer);
-                    }
-
-                    $l24SessionMins = round($l24CalcMins);
-                    $l24TotalChangedLines = $stats['last_24h']['additions'] + round($stats['last_24h']['deletions'] * 0.5);
-                    $l24LinesMins = round(($l24TotalChangedLines / $linesPerHour) * 60);
-                    $l24HybridMins = ($l24SessionMins > 0 && $l24LinesMins > 0) ? round(($l24SessionMins + $l24LinesMins) / 2) : max($l24SessionMins, $l24LinesMins);
-
-                    $stats['last_24h']['work_time_session'] = $formatTime($l24SessionMins);
-                    $stats['last_24h']['work_time_lines'] = $formatTime($l24LinesMins);
-                    $stats['last_24h']['work_time_hybrid'] = $formatTime($l24HybridMins);
-                }
+                $stats['yesterday']['work_time_session'] = $formatTime($sessionMinsY);
+                $stats['yesterday']['work_time_lines'] = $formatTime($linesMinsY);
+                $stats['yesterday']['work_time_hybrid'] = $formatTime($hybridMinsY);
 
                 if ($calcMode === 'lines') {
-                    $stats['work_time'] = $stats['work_time_lines'];
-                    $stats['today']['work_time'] = $stats['today']['work_time_lines'];
+                    $stats['yesterday']['work_time'] = $stats['yesterday']['work_time_lines'];
+                } elseif ($calcMode === 'hybrid') {
+                    $stats['yesterday']['work_time'] = $stats['yesterday']['work_time_hybrid'];
+                } else {
+                    $stats['yesterday']['work_time'] = $stats['yesterday']['work_time_session'];
+                }
+                $dailyWorkDurations[$yesterdayDate] = $sessionMinsY;
+            }
+
+            // --- 3. SON 24 SAAT (LAST_24H) ÇALIŞMA SÜRESİ (TAMAMEN BAĞIMSIZ!) ---
+            $last24hAllTimestamps = array_unique($last24hAllTimestamps);
+            if (count($last24hAllTimestamps) > 0) {
+                $sessionMins24 = $calcSessionDuration($last24hAllTimestamps);
+                $totalChangedLines24 = $stats['last_24h']['additions'] + round($stats['last_24h']['deletions'] * 0.5);
+                $linesMins24 = round(($totalChangedLines24 / $linesPerHour) * 60);
+                $hybridMins24 = ($sessionMins24 > 0 && $linesMins24 > 0) ? round(($sessionMins24 + $linesMins24) / 2) : max($sessionMins24, $linesMins24);
+
+                $stats['last_24h']['work_time_session'] = $formatTime($sessionMins24);
+                $stats['last_24h']['work_time_lines'] = $formatTime($linesMins24);
+                $stats['last_24h']['work_time_hybrid'] = $formatTime($hybridMins24);
+
+                if ($calcMode === 'lines') {
                     $stats['last_24h']['work_time'] = $stats['last_24h']['work_time_lines'];
                 } elseif ($calcMode === 'hybrid') {
-                    $stats['work_time'] = $stats['work_time_hybrid'];
-                    $stats['today']['work_time'] = $stats['today']['work_time_hybrid'];
                     $stats['last_24h']['work_time'] = $stats['last_24h']['work_time_hybrid'];
                 } else {
-                    $stats['work_time'] = $stats['work_time_session'];
-                    $stats['today']['work_time'] = $stats['today']['work_time_session'];
                     $stats['last_24h']['work_time'] = $stats['last_24h']['work_time_session'];
                 }
+
+                // Saatlik aktivite yoğunluğunu son 24 saat için güncelle (Isı haritası)
+                $hourlyCounts24 = array_fill(0, 24, 0);
+                foreach ($last24hAllTimestamps as $ts) {
+                    $h = (int)date('H', $ts);
+                    $hourlyCounts24[$h]++;
+                }
+                $stats['last_24h']['hourly_activity'] = $hourlyCounts24;
             }
 
             // ========================================================

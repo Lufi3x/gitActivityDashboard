@@ -234,6 +234,12 @@ function updateStatsUI(period) {
     const pStats = statsData[period];
     
     document.getElementById('statCommits').textContent = pStats.commits;
+    const subtitleEl = document.getElementById('statCommitsSubtitle');
+    if (subtitleEl) {
+        if (period === 'last_24h') subtitleEl.textContent = 'Son 24 Saatlik Commit';
+        else if (period === 'yesterday') subtitleEl.textContent = 'Dünkü Commit';
+        else subtitleEl.textContent = 'Bugünkü Commit';
+    }
     if (document.getElementById('statChangedFiles')) {
         document.getElementById('statChangedFiles').textContent = pStats.changed_files || 0;
     }

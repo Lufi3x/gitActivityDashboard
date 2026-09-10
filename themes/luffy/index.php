@@ -84,7 +84,7 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                             <div class="stat-icon anchor"><i class="fa-solid fa-anchor"></i></div>
                             <div class="stat-info">
                                 <strong>İŞLEM KOMUTU</strong>
-                                <span>Bugünkü Commit</span>
+                                <span id="statCommitsSubtitle">Bugünkü Commit</span>
                             </div>
                             <div class="stat-num" id="statCommits">0</div>
                         </li>
