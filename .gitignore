@@ -13,3 +13,5 @@ api/cache.json
 Thumbs.db
 
 Arşiv.zip
+# Kalıcı günlük süre geçmişi (sunucuda üretilir)
+api/work_history.json

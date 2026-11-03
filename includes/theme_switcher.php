@@ -10,7 +10,8 @@ $allThemes = [
     'hacker_terminal' => '🟢 Hacker Terminal',
     'minimal_light' => '☁️ Minimal Light',
     'glass_light' => '💎 Glass Light',
-    'luffy' => '🏴‍☠️ Korsan Kralı (Luffy)'
+    'luffy' => '🏴‍☠️ Korsan Kralı (Luffy)',
+    'mesai' => '🕰️ Mesai Defteri'
 ];
 ?>
 

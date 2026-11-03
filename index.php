@@ -12,7 +12,7 @@ if (file_exists($envFile)) {
     }
 }
 
-$allowedThemes = ['jarvis', 'activity_monitor', 'nitro_hud', 'hacker_terminal', 'minimal_light', 'glass_light', 'luffy'];
+$allowedThemes = ['jarvis', 'activity_monitor', 'nitro_hud', 'hacker_terminal', 'minimal_light', 'glass_light', 'luffy', 'mesai'];
 
 // 1. Kullanıcıdan gelen Tema Değiştirme İsteği (GET parametresi)
 if (isset($_GET['theme']) && in_array($_GET['theme'], $allowedThemes)) {

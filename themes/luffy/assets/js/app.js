@@ -45,6 +45,16 @@ async function fetchActivity(forceRefresh = false) {
 
             // İstatistikleri ekrana bas
             if (result.stats) {
+                // Kesintisiz Mesai (gün sıfırlamasından bağımsız)
+                const cs = result.stats.current_session;
+                if (cs && document.getElementById('sessionRow')) {
+                    document.getElementById('sessionRow').style.display = '';
+                    document.getElementById('sessionWorkTime').textContent = cs.work_time_str;
+                    document.getElementById('sessionStartLabel').textContent = (cs.active ? '' : 'Bitti • ') + cs.start_label + "'den beri";
+                    document.getElementById('sessionRow').title = 'Son commit: ' + cs.last_commit +
+                        (cs.gaps.length ? '\nCommit atılmayan aralar: ' + cs.gaps.map(g => g.from + '-' + g.to).join(', ') : '');
+                }
+
                 // Uzun Dönem İstatistikleri
                 if (result.stats.weekly_commits !== undefined) {
                     document.getElementById('longTermStatsSection').style.display = 'grid';

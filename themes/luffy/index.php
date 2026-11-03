@@ -135,6 +135,14 @@ $defaultTheme = (isset($envVariables) && isset($envVariables['DEFAULT_THEME'])) 
                                 </div>
                             </div>
                         </li>
+                        <li id="sessionRow" style="display:none;">
+                            <div class="stat-icon hourglass"><i class="fa-solid fa-moon"></i></div>
+                            <div class="stat-info">
+                                <strong>KESİNTİSİZ MESAİ</strong>
+                                <span id="sessionStartLabel">Gece yarısı sıfırlanmaz</span>
+                            </div>
+                            <div class="stat-num" id="sessionWorkTime">0dk</div>
+                        </li>
                     </ul>
                 </section>
 

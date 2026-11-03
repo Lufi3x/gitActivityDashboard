@@ -1280,6 +1280,61 @@ if ($httpcode === 200) {
             $stats['real_monthly_work_time_str'] = $formatTime($stats['monthly_commits'] * $minutesPerContrib);
 
             // ========================================================
+            // KESİNTİSİZ OTURUM (gece yarısını aşan çalışma)
+            // ========================================================
+            // Gün 00:00'da sıfırlanır ama mesai sıfırlanmaz: son commit'ten geriye gidip
+            // 6 saatten uzun ilk boşluğa (uyku) kadar olan zincir tek mesai sayılır.
+            // Commit atmadan çalışılan 3-4 saatlik aralar mesaiyi bölmez, "mola" olarak listelenir.
+            $restGap = 6 * 3600;
+            $allTs = array_merge($todayAllTimestamps, $yesterdayAllTimestamps, $last24hAllTimestamps);
+            foreach ($dailyTimestamps as $dTimes) { $allTs = array_merge($allTs, $dTimes); }
+            $allTs = array_values(array_unique($allTs));
+            rsort($allTs);
+            $stats['current_session'] = null;
+            if (count($allTs) > 0) {
+                $sessEnd = $allTs[0];
+                $sessStart = $sessEnd;
+                $gaps = [];
+                foreach ($allTs as $t) {
+                    $gap = $sessStart - $t;
+                    if ($gap > $restGap) break;
+                    if ($gap >= 90 * 60) $gaps[] = ['from' => date('H:i', $t), 'to' => date('H:i', $sessStart), 'from_ts' => $t, 'to_ts' => $sessStart, 'minutes' => round($gap / 60)];
+                    $sessStart = $t;
+                }
+                $isActive = ($nowTime - $sessEnd) <= 3 * 3600;
+                $endTs = $isActive ? $nowTime : $sessEnd + $postSessionBuffer * 60;
+                $sessMins = max($minSessionMinutes, round(($endTs - $sessStart) / 60));
+                $stats['current_session'] = [
+                    'active' => $isActive,
+                    'start' => date('c', $sessStart),
+                    'start_ts' => $sessStart,
+                    'end_ts' => $endTs,
+                    'start_label' => date('d.m H:i', $sessStart),
+                    'last_commit' => date('d.m H:i', $sessEnd),
+                    'minutes' => $sessMins,
+                    'work_time_str' => $formatTime($sessMins),
+                    'crosses_midnight' => date('Y-m-d', $sessStart) !== $todayDate,
+                    'gaps' => array_reverse($gaps), // commit atılmayan 90dk+ aralar
+                ];
+            }
+
+            // ========================================================
+            // KALICI GÜN GEÇMİŞİ (work_history.json)
+            // ========================================================
+            // Events API ~100 olaya kadar geriye gider; hesaplanan gerçek süreleri
+            // dosyada saklayarak eski günlerin push-saati süresini kaybetmiyoruz.
+            $historyFile = __DIR__ . '/work_history.json';
+            $history = file_exists($historyFile) ? (json_decode(@file_get_contents($historyFile), true) ?: []) : [];
+            foreach ($dailyWorkDurations as $hDate => $hMins) {
+                // Bugün/dün tam veriyle hesaplanır → üzerine yaz; eski günlerde events penceresi kısalır → büyük olanı tut
+                $history[$hDate] = ($hDate === $todayDate || $hDate === $yesterdayDate)
+                    ? (int)$hMins
+                    : max((int)($history[$hDate] ?? 0), (int)$hMins);
+            }
+            ksort($history);
+            @file_put_contents($historyFile, json_encode($history), LOCK_EX);
+
+            // ========================================================
             // GÜNLÜK ÇALIŞMA DÖKÜMÜ (daily_log)
             // ========================================================
             $dailyLog = [];
@@ -1298,11 +1353,8 @@ if ($httpcode === 200) {
                 $dDate = $dayItem['date'];
                 $dContribs = $dayItem['contributionCount'];
                 
-                if (isset($dailyWorkDurations[$dDate])) {
-                    $dMinutes = $dailyWorkDurations[$dDate];
-                } else {
-                    $dMinutes = round($dContribs * $minutesPerContrib);
-                }
+                $isMeasured = isset($history[$dDate]);
+                $dMinutes = $isMeasured ? $history[$dDate] : round($dContribs * $minutesPerContrib);
                 
                 $ts = strtotime($dDate);
                 $dayName = $turkishDays[date('l', $ts)] ?? date('l', $ts);
@@ -1315,6 +1367,7 @@ if ($httpcode === 200) {
                     'contributions' => $dContribs,
                     'work_minutes' => $dMinutes,
                     'work_time_str' => $formatTime($dMinutes),
+                    'measured' => $isMeasured, // true: push saatinden ölçüldü, false: katkı sayısından tahmin
                     'is_today' => ($dDate === $todayDate)
                 ];
             }
