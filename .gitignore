@@ -16,3 +16,5 @@ Arşiv.zip
 # Kalıcı günlük süre geçmişi (sunucuda üretilir)
 api/work_history.json
 api/projects_history.json
+api/refresh.lock
+api/cache.json.tmp

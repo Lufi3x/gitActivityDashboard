@@ -106,3 +106,8 @@ a.commit-msg:hover { text-decoration: underline; }
 @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
 .proj-top span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .proj-top .mono { flex-shrink: 0; }
+
+/* Yükleme çubuğu */
+.loadbar { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: var(--line); z-index: 1000; }
+.loadbar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.4s ease; }
+.hero-num.is-loading { color: var(--est); }

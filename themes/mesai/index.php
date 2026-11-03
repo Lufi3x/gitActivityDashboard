@@ -14,6 +14,7 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <div class="loadbar" id="loadbar" role="progressbar" aria-label="Veri yükleniyor" aria-valuemin="0" aria-valuemax="100" hidden><i id="loadbarFill"></i></div>
     <main class="sheet">
         <header class="top">
             <div>
@@ -25,7 +26,7 @@
 
         <section class="hero">
             <div class="hero-label"><span class="dot" id="liveDot"></span><span id="sessionState">KESİNTİSİZ MESAİ</span></div>
-            <div class="hero-num" id="sessionTime">—</div>
+            <div class="hero-num is-loading" id="sessionTime">…</div>
             <p class="muted" id="sessionSince">Gün 00:00'da sıfırlanır, mesai sıfırlanmaz.</p>
             <div class="timeline" id="timeline" aria-label="Mesai zaman çizelgesi"></div>
             <div class="timeline-axis mono" id="timelineAxis"></div>

@@ -10,15 +10,34 @@ let commits = [];
 let session = null;
 let range = 'session';
 
+// Gerçek ilerleme bilinmiyor (sunucu tek seferde cevap veriyor): ~40 sn'ye yayılan, %95'te bekleyen tahmini çubuk
+function startProgress() {
+    const bar = $('loadbar'), fill = $('loadbarFill'), t0 = Date.now();
+    bar.hidden = false; fill.style.width = '3%';
+    const timer = setInterval(() => {
+        const sec = (Date.now() - t0) / 1000;
+        const pct = Math.min(95, Math.round(95 * (1 - Math.exp(-sec / 15))));
+        fill.style.width = pct + '%';
+        bar.setAttribute('aria-valuenow', pct);
+        $('updatedAt').textContent = `GitHub'dan veri çekiliyor… %${pct} · ${Math.round(sec)} sn`;
+    }, 300);
+    return () => { clearInterval(timer); fill.style.width = '100%'; setTimeout(() => { bar.hidden = true; fill.style.width = '0'; }, 400); };
+}
+
 async function load() {
+    const done = startProgress();
     try {
         const res = await fetch('api/fetch_activity.php');
         const r = await res.json();
         if (r.error) throw new Error(r.error);
         render(r.stats);
+        $('sessionTime').classList.remove('is-loading');
         $('updatedAt').textContent = 'güncellendi ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     } catch (e) {
-        $('updatedAt').textContent = 'hata: ' + e.message;
+        $('updatedAt').textContent = 'hata: ' + e.message + ' · 10 sn sonra tekrar denenecek';
+        setTimeout(load, 10000);
+    } finally {
+        done();
     }
 }
 

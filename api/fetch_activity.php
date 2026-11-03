@@ -18,9 +18,30 @@ if ($forceRefresh) {
 }
 
 // Cache kontrolü
-if (!$forceRefresh && file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
-    echo file_get_contents($cacheFile);
-    exit;
+$servedStale = false;
+if (!$forceRefresh && file_exists($cacheFile)) {
+    $cached = file_get_contents($cacheFile);
+    if ((time() - filemtime($cacheFile)) < $cacheTime) {
+        echo $cached;
+        exit;
+    }
+    // Bayat cache: eski veriyi hemen gönder, yenisini arka planda hesapla (hesap 30-60 sn sürüyor).
+    // Aynı anda tek yenileme olsun diye kilit; kilit alınamazsa sadece eski veriyi ver.
+    $refreshLock = fopen(__DIR__ . '/refresh.lock', 'c');
+    if (!$refreshLock || !flock($refreshLock, LOCK_EX | LOCK_NB)) {
+        echo $cached;
+        exit;
+    }
+    ignore_user_abort(true);
+    @set_time_limit(300);
+    header('Content-Length: ' . strlen($cached));
+    header('Connection: close');
+    echo $cached;
+    while (ob_get_level() > 0) { ob_end_flush(); }
+    flush();
+    if (function_exists('fastcgi_finish_request')) { fastcgi_finish_request(); }
+    elseif (function_exists('litespeed_finish_request')) { litespeed_finish_request(); }
+    $servedStale = true;
 }
 
 $url = "https://api.github.com/users/" . GITHUB_USERNAME . "/events?per_page=100";
@@ -1432,11 +1453,11 @@ if ($httpcode === 200) {
         ]
     ]);
     
-    // Cache'i kaydet
-    file_put_contents($cacheFile, $output);
+    // Cache'i kaydet (önce geçici dosya, sonra rename: okuyan istek yarım JSON görmesin)
+    if (file_put_contents($cacheFile . '.tmp', $output) !== false) { rename($cacheFile . '.tmp', $cacheFile); }
     
-    echo $output;
-} else {
+    if (!$servedStale) echo $output;
+} elseif (!$servedStale) {
     echo json_encode([
         "error" => "GitHub API'sine bağlanırken bir sorun oluştu.", 
         "http_code" => $httpcode,
