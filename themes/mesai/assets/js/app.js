@@ -6,6 +6,9 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 let allDays = [];
 let showAll = false;
+let commits = [];
+let session = null;
+let range = 'session';
 
 async function load() {
     try {
@@ -21,6 +24,10 @@ async function load() {
 
 function render(s) {
     renderSession(s.current_session);
+    session = s.current_session;
+    commits = s.recent_commits || [];
+    renderProjects();
+    renderCommits();
 
     $('tToday').textContent = short(s.today && s.today.work_time_session);
     $('tTodayC').textContent = (s.today ? s.today.commits : 0) + ' commit';
@@ -55,6 +62,41 @@ function renderSession(cs) {
     $('gapList').innerHTML = cs.gaps.map(g => `<li>ara ${g.from}–${g.to} · ${fmtMins(g.minutes)}</li>`).join('');
 }
 
+const localDate = offset => { const d = new Date(); d.setDate(d.getDate() - offset); return d.toLocaleDateString('sv-SE'); };
+
+function commitsIn(r) {
+    if (r === 'today') return commits.filter(c => c.date === localDate(0));
+    if (r === 'yesterday') return commits.filter(c => c.date === localDate(1));
+    return session ? commits.filter(c => c.ts >= session.start_ts) : [];
+}
+
+function renderProjects() {
+    const groups = {};
+    commitsIn('session').forEach(c => {
+        const g = groups[c.repo] || (groups[c.repo] = { n: 0, first: c.ts, last: c.ts });
+        g.n++; g.first = Math.min(g.first, c.ts); g.last = Math.max(g.last, c.ts);
+    });
+    const rows = Object.entries(groups).sort((a, b) => b[1].n - a[1].n);
+    const max = rows.length ? rows[0][1].n : 1;
+    $('projCount').textContent = rows.length ? rows.length + ' proje' : '';
+    $('projectList').innerHTML = rows.length ? rows.map(([name, g]) => `<li class="proj">
+        <div class="proj-top"><span title="${esc(name)}">${esc(name)}</span><span class="mono">${g.n} commit · ${hhmm(g.first)}–${hhmm(g.last)}</span></div>
+        <div class="bar"><i style="width:${(g.n / max * 100).toFixed(1)}%"></i></div>
+    </li>`).join('') : '<li class="muted">Bu mesaide commit yok</li>';
+}
+
+function renderCommits() {
+    const list = commitsIn(range);
+    document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.range === range));
+    $('commitList').innerHTML = list.length ? list.map(c => {
+        const msg = esc(c.message || '(mesaj yok)');
+        const link = /^https:\/\/github\.com\//.test(c.url) ? `<a class="commit-msg" href="${esc(c.url)}" target="_blank" rel="noopener">${msg}</a>` : `<span class="commit-msg">${msg}</span>`;
+        return `<li class="commit"><time class="mono">${esc(c.time)}</time><div>${link}<span class="commit-repo mono">${esc(c.repo)} · ${esc(c.sha)}</span></div></li>`;
+    }).join('') : '<li class="muted">Commit yok</li>';
+}
+
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { range = b.dataset.range; renderCommits(); }));
+
 function renderDays() {
     const list = showAll ? allDays : allDays.slice(0, 30);
     const max = Math.max(60, ...list.map(d => d.work_minutes));
@@ -65,10 +107,18 @@ function renderDays() {
             <span class="day-date">${esc(date)}<small>${esc(dayName || '')}</small></span>
             <span class="bar"><i style="width:${(d.work_minutes / max * 100).toFixed(1)}%"></i></span>
             <span class="day-time mono">${d.work_minutes ? short(d.work_time_str) : '—'}</span>
+            ${chips(d.projects)}
         </li>`;
     }).join('');
     $('moreBtn').hidden = allDays.length <= 30;
     $('moreBtn').textContent = showAll ? 'Son 30 günü göster' : 'Tüm yılı göster';
+}
+
+function chips(projects) {
+    const p = Object.entries(projects || {});
+    if (!p.length) return '';
+    const shown = p.slice(0, 5).map(([n, c]) => `<span class="chip"><b>${esc(n)}</b> ${c}</span>`).join('');
+    return `<div class="chips">${shown}${p.length > 5 ? `<span class="chip">+${p.length - 5}</span>` : ''}</div>`;
 }
 
 $('moreBtn').addEventListener('click', () => { showAll = !showAll; renderDays(); });

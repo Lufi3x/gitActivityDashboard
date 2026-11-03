@@ -916,6 +916,7 @@ if ($httpcode === 200) {
             }
 
             // GraphQL üzerinden son pushlanan repoları kontrol edip aktif modüllere ekle ve gerçek diff verilerini çek
+            $recentCommits = []; // dün 00:00'dan beri tüm repolardaki commitler (mesajlarıyla)
             $extraAdditionsToday = 0;
             $extraDeletionsToday = 0;
             $extraFilesToday = 0;
@@ -982,6 +983,15 @@ if ($httpcode === 200) {
                                         $cDateStr = $cItem['commit']['author']['date'] ?? ($cItem['commit']['committer']['date'] ?? null);
                                         if ($cDateStr) {
                                             $cTs = strtotime($cDateStr);
+                                            $recentCommits[] = [
+                                                'repo' => $rName,
+                                                'ts' => $cTs,
+                                                'time' => date('H:i', $cTs),
+                                                'date' => date('Y-m-d', $cTs),
+                                                'message' => mb_substr(strtok($cItem['commit']['message'] ?? '', "\n"), 0, 140),
+                                                'sha' => substr($cItem['sha'] ?? '', 0, 7),
+                                                'url' => $cItem['html_url'] ?? '',
+                                            ];
                                             $cDate = date('Y-m-d', $cTs);
 
                                             if ($cDate === $todayDate) {
@@ -1334,6 +1344,21 @@ if ($httpcode === 200) {
             ksort($history);
             @file_put_contents($historyFile, json_encode($history), LOCK_EX);
 
+            // Commit listesi (yeniden eskiye) + günlük proje dökümü (projects_history.json'da kalıcı)
+            usort($recentCommits, fn($a, $b) => $b['ts'] <=> $a['ts']);
+            $stats['recent_commits'] = $recentCommits;
+            $dayProjects = [];
+            foreach ($recentCommits as $rc) {
+                $dayProjects[$rc['date']][$rc['repo']] = ($dayProjects[$rc['date']][$rc['repo']] ?? 0) + 1;
+            }
+            $projHistFile = __DIR__ . '/projects_history.json';
+            $projHistory = file_exists($projHistFile) ? (json_decode(@file_get_contents($projHistFile), true) ?: []) : [];
+            foreach ($dayProjects as $pDate => $pRepos) {
+                if ($pDate === $todayDate || $pDate === $yesterdayDate) { arsort($pRepos); $projHistory[$pDate] = $pRepos; }
+            }
+            ksort($projHistory);
+            @file_put_contents($projHistFile, json_encode($projHistory), LOCK_EX);
+
             // ========================================================
             // GÜNLÜK ÇALIŞMA DÖKÜMÜ (daily_log)
             // ========================================================
@@ -1368,6 +1393,7 @@ if ($httpcode === 200) {
                     'work_minutes' => $dMinutes,
                     'work_time_str' => $formatTime($dMinutes),
                     'measured' => $isMeasured, // true: push saatinden ölçüldü, false: katkı sayısından tahmin
+                    'projects' => $projHistory[$dDate] ?? new stdClass(), // {repo: commit sayısı}
                     'is_today' => ($dDate === $todayDate)
                 ];
             }
@@ -1381,6 +1407,7 @@ if ($httpcode === 200) {
     
     if (!$showLogs) {
         $filtered_events = []; // İfşayı engellemek için logları API'den bile siliyoruz
+        $stats['recent_commits'] = [];
     }
     
     if (!$showProjects) {
@@ -1388,6 +1415,8 @@ if ($httpcode === 200) {
         $stats['today']['active_projects'] = [];
         $stats['yesterday']['active_projects'] = [];
         $stats['last_24h']['active_projects'] = [];
+        $stats['recent_commits'] = [];
+        foreach (($stats['daily_log'] ?? []) as $i => $_) { $stats['daily_log'][$i]['projects'] = new stdClass(); }
     }
     
     $output = json_encode([

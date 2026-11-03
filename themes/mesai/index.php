@@ -39,6 +39,24 @@
             <div class="tile"><span class="tile-k">SON 7 GÜN</span><span class="tile-v" id="t7">—</span><span class="tile-s mono" id="t7C"></span></div>
         </section>
 
+        <section class="split">
+            <div class="panel">
+                <div class="history-head"><h2>Bu mesaide projeler</h2><span class="mono muted" id="projCount"></span></div>
+                <ul class="projects" id="projectList"><li class="muted">—</li></ul>
+            </div>
+            <div class="panel">
+                <div class="history-head">
+                    <h2>Commitler</h2>
+                    <div class="seg" role="group" aria-label="Commit aralığı">
+                        <button type="button" data-range="session" class="on">Mesai</button>
+                        <button type="button" data-range="today">Bugün</button>
+                        <button type="button" data-range="yesterday">Dün</button>
+                    </div>
+                </div>
+                <ol class="commits" id="commitList"><li class="muted">—</li></ol>
+            </div>
+        </section>
+
         <section class="history">
             <div class="history-head">
                 <h2>Geçmiş günler</h2>
